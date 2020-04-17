@@ -17,6 +17,10 @@ package com.paritytrading.parity.reporter;
 
 import java.util.Locale;
 
+/*
+ * WTC extended by TSVFormat.java and DisplayFormat.java
+ */
+
 abstract class TradeListener {
 
     abstract void trade(Trade event);

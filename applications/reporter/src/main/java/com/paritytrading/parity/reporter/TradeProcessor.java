@@ -24,14 +24,30 @@ import com.paritytrading.parity.util.Timestamps;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+ * PMR is Parity Market Reporting. Seems to require UDP in Parity 0.7.1
+ */
 class TradeProcessor implements PMRListener {
 
     private final Map<Long, Order> orders;
 
     private final Trade trade;
+    
+    /*
+     * WTC note that TradeListener is abstract, 
+     * extended by TSVFormat.java and DisplayFormat.java
+     * 
+     * Verify Java semantics
+     */
 
     private final TradeListener listener;
 
+    /*
+     * WTC Constructor (TradeListener) so can take any class that extends,
+     * in reporter extended by TSVFormat.java and DisplayFormat.java
+     * 
+     * Constructed from TradeReporter
+     */
     TradeProcessor(TradeListener listener) {
         this.orders = new HashMap<>();
 

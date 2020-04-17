@@ -40,6 +40,10 @@ import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jvirtanen.config.Configs;
 
+// to setBridge in EnterCommand objects
+import com.paritytrading.parity.client.EnterCommand;
+
+
 class TerminalClient implements Closeable {
 
     static final Command[] COMMANDS = new Command[] {
@@ -52,6 +56,9 @@ class TerminalClient implements Closeable {
         new HelpCommand(),
         new ExitCommand(),
     };
+    
+    // place in buy/sell Commands	
+    static final CtsBridge ctsBridge = new CtsBridge(); 
 
     static final String[] COMMAND_NAMES = Stream.of(COMMANDS)
             .map(Command::getName)
@@ -71,12 +78,21 @@ class TerminalClient implements Closeable {
 
     private boolean closed;
 
-    private TerminalClient(Events events, OrderEntry orderEntry, Instruments instruments) {
+    private TerminalClient(Events events, OrderEntry orderEntry,
+    		Instruments instruments) {
         this.events      = events;
         this.orderEntry  = orderEntry;
         this.instruments = instruments;
-
         this.orderIdGenerator = new OrderIDGenerator();
+        
+        // for CTS integration for each hooked command
+        EnterCommand command;
+        
+        command = (EnterCommand) COMMANDS[0];
+        command.setBridge(ctsBridge);
+        
+        command = (EnterCommand) COMMANDS[1];
+        command.setBridge(ctsBridge);
     }
 
     static TerminalClient open(InetSocketAddress address, String username,
@@ -112,7 +128,36 @@ class TerminalClient implements Closeable {
     Events getEvents() {
         return events;
     }
-
+    
+    /*
+     * WTC getters for Buy, Sell EnterCommand instances
+     * 
+     * EnterCommand.linkExecute() allows calls from
+     * CtsBridge class, returning String orderId
+     * 
+     * Note that POE protocol includes messages from server to use to
+     * generate CTS transaction
+     * 		Order Entered (taken by System)
+     * 		Order Added (put into correct Order Book
+     * 		Order Canceled (for future CTS EiCancelTender
+     * 		Trade (showing resting and incoming order numbers)
+     */
+    public TerminalClient getClient()	{
+    	return this;
+    }
+    
+    // Return the instance of EnterCommand that performs Buy
+    public static Command getBuy()	{
+    //	System.out.println(COMMANDS[0].getDescription());
+    	return COMMANDS[0];
+    }
+    
+    // Return the instance of EnterCommand that performs Sell
+    public static Command getSell()	{
+    //	System.out.println(COMMANDS[1].getDescription());
+    	return COMMANDS[1];
+    }
+    
     void run() throws IOException {
         LineReader reader = LineReaderBuilder.builder()
             .completer(new StringsCompleter(COMMAND_NAMES))
@@ -168,7 +213,7 @@ class TerminalClient implements Closeable {
         System.out.printf(LOCALE, format, args);
     }
 
-    private Scanner scan(String text) {
+	private Scanner scan(String text) {
         Scanner scanner = new Scanner(text);
         scanner.useLocale(LOCALE);
 
@@ -195,7 +240,9 @@ class TerminalClient implements Closeable {
         String      orderEntryPassword = config.getString("order-entry.password");
 
         Instruments instruments = Instruments.fromConfig(config, "instruments");
+        ctsBridge.setInstruments(instruments);
 
+        // and open then run
         TerminalClient.open(new InetSocketAddress(orderEntryAddress, orderEntryPort),
                 orderEntryUsername, orderEntryPassword, instruments).run();
     }

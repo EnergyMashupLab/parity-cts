@@ -27,21 +27,32 @@ import java.util.Scanner;
 class EnterCommand implements Command {
 
     private final POE.EnterOrder message;
+    
+    // place in buy/sell Commands	
+    private CtsBridge ctsBridge; 
+    
+    // WTC hookExecute is called only when hookExecuteFlag is true
+	Boolean hookExecuteFlag = false; // if true executes hook first time per side
 
     /*
-     * WTC Constructor creates the POE (Parity Order Entry protocol) message with Side
-     * from the contructor parameter
+     * WTC Constructor creates the POE (Parity Order Entry protocol) message
+     * with Side from the constructor parameter
      */
     EnterCommand(byte side) {
         this.message = new POE.EnterOrder();
-
         this.message.side = side;
     }
 
     /*
-     * WTC Execute executes this command and parses the commmand line, sending the
-     * result to execute(Client, long, long, long) below.
+     * WTC Execute executes this command and parses the command line, sending
+     * the result to execute(Client, long, long, long) below.
      */
+    
+    /*
+     * Execute with a Scanner to finish command line parsing, then
+     * call private execute to process
+     */
+
     @Override
     public void execute(TerminalClient client, Scanner arguments) throws IOException {
         try {
@@ -56,21 +67,24 @@ class EnterCommand implements Command {
             if (config == null)
                 throw new IllegalArgumentException();
 
-            execute(client, Math.round(quantity * config.getSizeFactor()), instrument, Math.round(price * config.getPriceFactor()));
+            execute(client, Math.round(quantity * config.getSizeFactor()),
+            			instrument, Math.round(price * config.getPriceFactor()));
         } catch (NoSuchElementException e) {
             throw new IllegalArgumentException();
         }
     }
     
     /*
-     * WTC Chained from execute with parsing command line
+     * WTC Chained from execute after parsing command line
      */
-
-    private void execute(TerminalClient client, long quantity, long instrument, long price) throws IOException {
-        String orderId = client.getOrderIdGenerator().next();
+    private void execute(TerminalClient client, long quantity, long instrument,
+    		long price) throws IOException {
+    	
+    	String orderId = client.getOrderIdGenerator().next();
 
         /*
-         * WTC this inserts field values into the message
+         * WTC insert field values into the message
+         * THIS MAY NOT BE THREAD SAFE
          */
         ASCII.putLeft(message.orderId, orderId);
         message.quantity   = quantity;
@@ -84,11 +98,69 @@ class EnterCommand implements Command {
         client.getOrderEntry().send(message);
 
         printf("\nOrder ID\n----------------\n%s\n\n", orderId);
+        
+        // WTC hook - one level call based on flag
+        if (hookExecuteFlag)	{
+        	hookExecuteFlag = false;
+        	System.err.println("before hookExecute call quantity " + quantity + 
+        			" instrument long " + instrument + " price " + price);
+        	hookExecute(client, quantity, instrument, price);
+        }
     }
 
     /*
-     * WTC for printing in the command driver
+     * WTC hookExecute is called from execute(client, long, long, long) for 
+     * hooking into that function. This version creates a specific order with
+     * the same side. 
+     * 
+     * Set hookExecuteFlag to true to mirror first order
      */
+    void hookExecute(TerminalClient client, long quantity, long instrument,
+    		long price) throws IOException	{
+    	// create a tender quantity 19 instrument AAPL price 123
+      	System.err.println("inside hookExecute quantity " + quantity +
+      			" instrument long " + instrument + " price " + price);
+    	execute(client, 19, instrument, 123*100);
+    }
+    /*
+     * Setter for CTS integration - method to set ctsBridge attribute
+     */
+    public void setBridge(CtsBridge bridge)	{
+    	ctsBridge = bridge;
+    }
+
+    /*
+     * WTC For calls from CtsBridge class to equivalent of EnterCommand private
+     * execute. This version returns String form of orderId to allow caching
+     * to Parity orderIds.
+     */
+    public String bridgeExecute(TerminalClient client, long quantity, long instrument,
+    		long price) throws IOException {
+    	
+    	String orderId = client.getOrderIdGenerator().next();
+
+        /*
+         * WTC insert field values into the message
+         * THIS MAY NOT BE THREADSAFE
+         */
+        ASCII.putLeft(message.orderId, orderId);
+        message.quantity   = quantity;
+        message.instrument = instrument;
+        message.price      = price;
+        
+        /*
+         * WTC Actual message send
+         */
+        client.getOrderEntry().send(message);
+
+        /*
+         *	Return he orderId just sent as a String
+         */
+        return new String(message.orderId);
+    }
+    
+    
+
     @Override
     public String getName() {
         return message.side == POE.BUY ? "buy" : "sell";

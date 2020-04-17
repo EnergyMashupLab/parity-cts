@@ -23,6 +23,16 @@ import java.util.Scanner;
 
 class TradesCommand implements Command {
 
+	/*
+	 * WTC execute command including command line scan then pull
+	 * matches (client.getEvents) and print.
+	 * 
+	 * Possible that the TerminalClient tracks events - look for PMD listener
+	 */
+	
+	/*
+	 * WTC check Reporter for simpler Trade reporting
+	 */
     @Override
     public void execute(TerminalClient client, Scanner arguments) {
         if (arguments.hasNext())
@@ -42,9 +52,16 @@ class TradesCommand implements Command {
         header.add("Quantity", sizeWidth);
         header.add("Price",   priceWidth);
 
+        /*
+         * WTC why are collect and printf in italic?
+         */
         printf("\n");
         printf(header.format());
 
+        /*
+         * WTC Trade listener seems to put events into Trades,
+         * might be able to simply read those
+         */
         for (Trade trade : Trades.collect(client.getEvents()))
             printf("%s\n", trade.format(client.getInstruments()));
         printf("\n");
