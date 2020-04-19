@@ -23,6 +23,7 @@ import com.paritytrading.parity.util.Instrument;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.io.UnsupportedEncodingException;
 
 class EnterCommand implements Command {
 
@@ -126,7 +127,9 @@ class EnterCommand implements Command {
      * Setter for CTS integration - method to set ctsBridge attribute
      */
     public void setBridge(CtsBridge bridge)	{
-    	ctsBridge = bridge;
+    	Boolean nullBridge;
+    	nullBridge = (bridge == null);
+    	this.ctsBridge = bridge;
     }
 
     /*
@@ -159,7 +162,24 @@ class EnterCommand implements Command {
         return new String(message.orderId);
     }
     
+    public EnterCommand getSideCommand()	{
+    	return this;
+    }
     
+    public String getSide()	{
+    	byte	sideByte[];
+     	String	sideString = null;
+    	
+    	sideByte = new byte[1]; sideByte[0] = this.message.side;
+    			
+    	try	{
+    		sideString = new String(sideByte, "UTF-8");
+    	} catch	(UnsupportedEncodingException e)	{
+    		System.err.println("Unsupported EncodingException in getSide");
+    	}
+    	
+    	return sideString;
+    }
 
     @Override
     public String getName() {

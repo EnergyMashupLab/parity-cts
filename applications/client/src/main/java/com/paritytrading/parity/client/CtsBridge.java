@@ -2,7 +2,8 @@ package com.paritytrading.parity.client;
 
 // does this statically import all Terminalclient elements, or import only static?
 
-import static com.paritytrading.parity.client.TerminalClient.*;
+import com.paritytrading.parity.client.TerminalClient.*;
+import com.paritytrading.parity.client.EnterCommand.*;
 
 import com.paritytrading.foundation.ASCII;
 import com.paritytrading.parity.net.poe.POE;
@@ -12,6 +13,8 @@ import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import java.util.Random;
 
 /*
  * This class is used to send and receive (via Spring RestContoller interactions)
@@ -53,110 +56,139 @@ import java.util.Scanner;
  * the *from* info
  */
 
-class CtsBridge {
+class CtsBridge {	
+
+	public CtsBridge() {
+		//	initTenders();
+		//	sendTenders();
+	}
+	
+	public CtsBridge(TerminalClient client, Events events, Instruments instruments)	{
+		// store information needed to call EnterCommand.bridgeExecute()
+		this.client = client;
+		this.events = events;
+		this.instruments = instruments;
+	}
+
+	// set by TerminalClient call to this.setSide()
+	EnterCommand buySide, sellSide; 	
+	Instruments instruments;
+	TerminalClient client;
+	// events may be used for detecting order entered/cancelled, updates from trade
+	Events events;
+	
+
+	// arrays for volatile parts of an order via GetCommand.ctsBridgeExecute
+	// Other parts include the instrument and client
+	private Instrument localInstrument;
+	private static long[] quantity = new long[10];
+	private static long[] price = new long[10];
+	private static String[] orderIds = new String[10];
+	
+	// for randomized quantity and price
+	final static Random rand = new Random();	
 
 	
-	/*
-	 * 	setClient - for TerminalClient to set client to use for
-	 * 				 buy.bridgeExecute
-	 * 	setInstruments - for TerminalClient to set CtsBridgeinstruments
-	 * 				to use for iteration/lookup
-	 * 	setBuySide and setSellSide - for EnterCommand instances to set buySide
-	 * 				and sellSide
-	 */
+
 	
-	public CtsBridge() {
-		// Work in progress
-		// AAPL is long 4702127773838221344 price price * 10 **2 decimal places 119 -> 11900
+	void run()	{
 		initTenders();
 		sendTenders();
 	}
 	
-	private EnterCommand buySide, sellSide;
-	private Instrument localInstrument;
-	private Instruments instruments;
-	private long longInstrument = 4702127773838221344L; // AAPL instrument
-	private TerminalClient client;
-	private long[] quantity = new long[10];
-	private long[] price = new long[10];
-	private String[] orderIds = new String[10];
-	
 	void initTenders()	{
 		int i;
 		
-		if (buySide == null)	{
-			System.err.println("buySide is null");
-		}	else	{
-			System.err.println("buySide is NOT null");
-		}
-		if (sellSide == null)	{
-			System.err.println("sellSide is null");
-		}	else	{
-			System.err.println("sellSide is NOT null");
-		}
+		// CTS price * 10 **2 decimal places 119 == Parity price 11900
+		long longInstrument = 4702127773838221344L; // AAPL instrument
+		long randQuantity = 10;	// will be random quantity from 20 to 100
+		long randPrice = 60;	// will be random price in dollars from 75 to 125
 		
-		//initialize variable part of tender test information
-		
+		//initialize non-fixed parameter array for test tenders with random values
 		for (i = 0; i < 10; i++)	{
-			quantity[i] = 10 + i;
-			price[i] = (30 + 5 * i) * 100;	// price 2 decimal digits in config
+			randQuantity = 20 + rand.nextInt(80);
+			randPrice = 75 + rand.nextInt(50);
+			
+			quantity[i] = randQuantity;
+			price[i] = randPrice * 100;
+		}
+		
+		// DEBUG print the headers
+		System.out.println("initTenders: initialized array");
+		System.out.println(" #  Quantity   Price");
+		System.out.println("___ ________   ______");
+		// DEBUG and the orders to be entered
+		for (i = 0; i < 10; i++)	{
+			System.out.println("  " + i + "    " + quantity[i] + "       " + (price[i]/100));
 		}
 	}
 	
 	void sendTenders()	{
+		// CTS price * 10 **2 decimal places 119 == Parity price 11900
 		int i;
-		
+		long longInstrument = 4702127773838221344L; // AAPL instrument
+			
 		for (i= 0; i < 10; i++)	{
 			//choose buy or sell side by modular arithmetic
 			if ( i%2 == 0)	{
 				// even number - sell
 				 try	{
-					 orderIds[i] = 
-							 sellSide
-							 .
-							 bridgeExecute
-							 (client, 
-							 quantity[i],
-							 longInstrument,
-							 price[i]);
+					 orderIds[i] = sellSide.bridgeExecute
+							 (getClient(), quantity[i],
+							 longInstrument,price[i]);
 				 } catch (IOException e) {
-					 System.err.println("error: Connection closed");
-				 }
-				    		
+					 System.out.println("error: CtsBridge: Connection closed");
+				 }	
 			} else	{
 				// odd number - buy
 				try	{
-					orderIds[i] = buySide.bridgeExecute(client, quantity[i], longInstrument,price[i]);
+					orderIds[i] = buySide.bridgeExecute(
+								client, quantity[i],
+								longInstrument, price[i]);
 				} catch (IOException e) {
-					 System.err.println("error: Connection closed");
+					 System.out.println("error: CtsBridge: Connection closed");
 				}
 			}
-			System.err.println("CtsBridge: Returned OrderId '" + orderIds[i]);
+			System.out.println();
 		}
 	}
 
+	/*
+	 * 	setClient - for TerminalClient to set for buy.bridgeExecute
+	 * 	setInstruments - for TerminalClient to set for iteration/lookup
+	 * 	setBuySide and setSellSide - for EnterCommand instances to 
+	 * 			set buySide and sellSide
+	 */
 	public TerminalClient getClient() {
 		return client;
 	}
+	
 	public void setClient(TerminalClient client) {
 		this.client = client;
 	}
-	public Command getBuySide() {
+	
+	public EnterCommand getBuySide() {
 		return buySide;
 	}
+	
 	public void setBuySide(EnterCommand buyCmd) {
 		this.buySide = buyCmd;
 	}
-	public Command getSellSide() {
+	
+	public EnterCommand getSellSide() {
 		return sellSide;
 	}
+	
 	public void setSellSide(EnterCommand sellCmd) {
 		this.sellSide = sellCmd;
 	}
+	
 	public Instruments getInstruments() {
 		return instruments;
 	}
+	
 	public void setInstruments(Instruments instruments) {
 		this.instruments = instruments;
 	}
+	
 }

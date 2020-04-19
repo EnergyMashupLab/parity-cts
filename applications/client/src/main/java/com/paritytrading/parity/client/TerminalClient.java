@@ -40,9 +40,10 @@ import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jvirtanen.config.Configs;
 
+// Determine whether needed
 // to setBridge in EnterCommand objects
 import com.paritytrading.parity.client.EnterCommand;
-
+import com.paritytrading.parity.client.CtsBridge;
 
 class TerminalClient implements Closeable {
 
@@ -57,8 +58,9 @@ class TerminalClient implements Closeable {
         new ExitCommand(),
     };
     
-    // place in buy/sell Commands	
-    static final CtsBridge ctsBridge = new CtsBridge(); 
+
+    // link to the CtsBridge and use for setters
+    static CtsBridge ctsBridge; 
 
     static final String[] COMMAND_NAMES = Stream.of(COMMANDS)
             .map(Command::getName)
@@ -84,21 +86,17 @@ class TerminalClient implements Closeable {
         this.orderEntry  = orderEntry;
         this.instruments = instruments;
         this.orderIdGenerator = new OrderIDGenerator();
-        
-        // for CTS integration for each hooked command
-        EnterCommand command;
-        
-        command = (EnterCommand) COMMANDS[0];
-        command.setBridge(ctsBridge);
-        
-        command = (EnterCommand) COMMANDS[1];
-        command.setBridge(ctsBridge);
     }
 
+    /*
+     * open is the first point where instruments, events and client are available
+     * to create new CtsBridge
+     */
     static TerminalClient open(InetSocketAddress address, String username,
             String password, Instruments instruments) throws IOException {
         Events events = new Events();
-
+        TerminalClient terminalClient;	// temp for result of new TerminalClient()
+        EnterCommand buy, sell;
         OrderEntry orderEntry = OrderEntry.open(address, events);
 
         SoupBinTCP.LoginRequest loginRequest = new SoupBinTCP.LoginRequest();
@@ -109,8 +107,32 @@ class TerminalClient implements Closeable {
         ASCII.putLongRight(loginRequest.requestedSequenceNumber, 0);
 
         orderEntry.getTransport().login(loginRequest);
-
-        return new TerminalClient(events, orderEntry, instruments);
+        
+        terminalClient = new TerminalClient(events, orderEntry, instruments);
+        
+        /*
+         * First place in execution where client, events, instruments, and Command classes
+         * for buy and sell (subclassed to EnterCommand) are all available.
+         * 
+         * Captured the new TerminalClient from this static routine for CtsBridge.
+         * 
+         * Extract the buy and sell side EnterCommand objects and set their ref to ctsBridge
+         */      
+         ctsBridge = new CtsBridge(terminalClient, events, instruments);
+         
+         // tell the buy and sell EnterCommand instances about CtsBridging
+         buy = (EnterCommand) COMMANDS[0];
+         buy.setBridge(ctsBridge);
+         
+         sell = (EnterCommand) COMMANDS[1];
+         sell.setBridge(ctsBridge); 
+         
+         ctsBridge.setBuySide(buy);
+         ctsBridge.setSellSide(sell);
+         ctsBridge.run();
+         
+         // and return the constructed terminalClient
+         return terminalClient;
     }
 
     OrderEntry getOrderEntry() {
@@ -146,17 +168,48 @@ class TerminalClient implements Closeable {
     	return this;
     }
     
-    // Return the instance of EnterCommand that performs Buy
-    public static Command getBuy()	{
-    //	System.out.println(COMMANDS[0].getDescription());
-    	return COMMANDS[0];
+    // Return the instance of EnterCommand that sends enter buy
+    public static EnterCommand getBuy()	{
+    	EnterCommand saveEnter;
+    	Command saveCommand = COMMANDS[0];
+
+    	saveEnter = (EnterCommand) saveCommand;   	
+    	if (saveEnter == null)	{
+    		System.out.println("TerminalClient: getBuy: saveGet is null");
+    	}	else	{
+    		System.out.println("TerminalClient: getBuy: saveGet is not null");	
+    	}
+
+    	System.out.println(COMMANDS[0].getDescription()); 	
+    	System.out.println("TerminalClient: getBuy: side is " + saveEnter.getSide());
+    	return saveEnter;
     }
     
+    
+    // Return the instance of EnterCommand that sends enter sell
+    public static EnterCommand getSell()	{
+    	EnterCommand saveEnter;
+    	Command saveCommand = COMMANDS[1];
+
+    	saveEnter = (EnterCommand) saveCommand;   	
+    	if (saveEnter == null)	{
+    		System.out.println("TerminalClient: getBuy: saveEnter is null");
+    	}	else	{
+    		System.out.println("TerminalClient: getBuy: saveEnter is not null");	
+    	}
+
+    	System.out.println(COMMANDS[0].getDescription()); 	
+    	System.out.println("TerminalClient: getSell: side is " + saveEnter.getSide() );
+    	return saveEnter;
+    }
+    
+    /*
     // Return the instance of EnterCommand that performs Sell
     public static Command getSell()	{
     //	System.out.println(COMMANDS[1].getDescription());
     	return COMMANDS[1];
     }
+    */
     
     void run() throws IOException {
         LineReader reader = LineReaderBuilder.builder()
@@ -223,7 +276,7 @@ class TerminalClient implements Closeable {
     public static void main(String[] args) throws IOException {
         if (args.length != 1)
             usage("parity-client <configuration-file>");
-
+        
         try {
             main(config(args[0]));
         } catch (EndOfFileException | UserInterruptException e) {
@@ -240,7 +293,6 @@ class TerminalClient implements Closeable {
         String      orderEntryPassword = config.getString("order-entry.password");
 
         Instruments instruments = Instruments.fromConfig(config, "instruments");
-        ctsBridge.setInstruments(instruments);
 
         // and open then run
         TerminalClient.open(new InetSocketAddress(orderEntryAddress, orderEntryPort),
