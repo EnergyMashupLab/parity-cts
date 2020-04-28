@@ -1,2 +1,7 @@
 *.jar
 target/
+.DS_store
+.classpath
+.settings
+.project
+.factorypath

@@ -30,7 +30,8 @@ class DisplayFormat extends TradeListener {
         int sizeWidth  = instruments.getSizeWidth();
 
         TableHeader header = new TableHeader();
-
+        // TODO change header format to support order numbers buy and sell
+        // OR better to use TSV which includes that value,
         header.add("Timestamp",       12);
         header.add("Inst",             8);
         header.add("Quantity", sizeWidth);
@@ -50,6 +51,7 @@ class DisplayFormat extends TradeListener {
         printf(instrument.getSizeFormat(), event.quantity / instrument.getSizeFactor());
         printf(" ");
         printf(instrument.getPriceFormat(), event.price / instrument.getPriceFactor());
+        // TODO instead of buy/seller NAME ("parity") print ORDERID
         printf(" %-8s %-8s\n", event.buyer, event.seller);
     }
 
