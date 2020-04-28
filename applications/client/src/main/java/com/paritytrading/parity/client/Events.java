@@ -20,6 +20,22 @@ import com.paritytrading.parity.net.poe.POEClientListener;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/*
+ *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
+ *	and EiCanceledTender and error information
+ *		orderAccepted
+ *		orderRejected
+ *		orderExecuted
+ *		orderCanceled
+ *
+ *	Events is where events are created based on incoming messages from
+ *	Parity system.
+ *
+ *From Event.java - in common
+ *      public final long   timestamp;
+ *      public final String orderId;
+ */
 class Events implements POEClientListener {
 
     private final List<Event> events;
@@ -35,26 +51,58 @@ class Events implements POEClientListener {
 
     @Override
     public void orderAccepted(POE.OrderAccepted message) {
+    	String s = new String(message.orderId);
+    	
+    	System.out.println("start of orderAccepted " + s);
         add(new Event.OrderAccepted(message));
     }
 
     @Override
     public void orderRejected(POE.OrderRejected message) {
+    	String s = new String(message.orderId);
+    	
+    	System.out.println("start of orderRejected " + s);
         add(new Event.OrderRejected(message));
     }
 
+    /*
+     * POE.OrderExecuted.java includes attributes we need:
+
+     * 		orderId - maps to CTS OrderId in CtsBridge
+     * 		quantity
+     * 		price
+     * Not used by CTS
+     * 		timestamp
+     * 		liquidityFlag
+     * 		matchNumber
+     */
     @Override
     public void orderExecuted(POE.OrderExecuted message) {
+    	String s = new String(message.orderId);
+    	
+    	System.out.println("start of orderExecuted " + s );
         add(new Event.OrderExecuted(message));
     }
 
     @Override
     public void orderCanceled(POE.OrderCanceled message) {
+    	String s = new String(message.orderId);
+    	
+    	System.out.println("start of orderCanceled " + s);
         add(new Event.OrderCanceled(message));
     }
 
     private synchronized void add(Event event) {
+    	/* DEBUG
+    	String orderId;
+    	long timestamp;
+    	orderId = event.orderId;
+    	timestamp = event.timestamp;
+    	*/
+    	
+    	System.out.println("add event%n");
         events.add(event);
     }
 
+    
 }

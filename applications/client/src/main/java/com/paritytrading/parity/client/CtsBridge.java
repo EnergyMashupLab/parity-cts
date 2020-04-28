@@ -17,43 +17,33 @@ import java.util.Scanner;
 import java.util.Random;
 
 /*
- * This class is used to send and receive (via Spring RestContoller interactions)
- * messages both ways between the LME and the enhanced Parity Terminal Client
+ * CtsBridge is used to send and receive (via Spring RestContoller interactions)
+ * messages both ways between the LME and the enhanced Parity Terminal Client.
  * 
- * An EiCreateTender message will be sent from the LME, turned into a 
- * Parity Order Entry:
+ * Functions including two way mapping between CTS tenderId and Parity orderId are here.
  * 
- * 		Initial implementation does not return anything to LME
- * 
- * 		Future versions will use the messages sent by the Parity Engine to
- * 		generate return values, and POST back any matches in which an order
- * 		participates, for EiCreateTransaction from the LME.
+ * An EiCreateTender message will be received from the LME and turned into a 
+ * Parity Order Entry with mapping of tender/order IDs
  * 
  * All prices and quantities are of the minimum increment; the minimum increment
- * MUST be consistent across this enhanced Terminal Client.
- * 
- * Mapping between CTS tenders and parity orders are maintained in this class.
+ * MUST be consistent across this enhanced Terminal Client. First implementation
+ * will use minimum increment price of one-tenth of a cent, a factor of 1000, and
+ * integers for quantity.
  */
 
 /*
- * PLEASE NOTE that this class is planned to run multiple Spring
+ * Design note: This class is planned to run multiple Spring
  * RestControllers for POST and PUT operations between CTS and Parity. 
  * 
  * Terminal client message will go to the terminal window executing the shaded
- * jar, so manual entry of orders should continue to work.
+ * jar, so manual entry of orders and detection of trades and of the order books,
+ * by allowing the Parity Client orders (buy and sell) and the separate ticker and
+ * (trade) reporter to function as designed.
  * 
- * By design the orders and trades commands should also continue to work in
- * parallel with order entry from the LME
- * 
- * To Parity System
- * 		Buy orders
- * 		Sell orders
+ * The orders and trades
  * 
  * Future information retrieved from Parity System Event Visitor
  * 		status of orders (which includes matches by which orders are fulfilled)
- * 
- * Alternative;u, the ticker and/or reporter applications could be used for
- * the *from* info
  */
 
 class CtsBridge {	
@@ -74,12 +64,15 @@ class CtsBridge {
 	EnterCommand buySide, sellSide; 	
 	Instruments instruments;
 	TerminalClient client;
-	// events may be used for detecting order entered/cancelled, updates from trade
-	Events events;
+	/*
+	 * Events may be used for detecting order entered/cancelled, updates from trades.
+	 * This implementation hooks the message entry into the client and calls out to
+	 * CtsBridge methods.
+	 */
+	Events events;	// local copy if used for evolution
 	
 
 	// arrays for volatile parts of an order via GetCommand.ctsBridgeExecute
-	// Other parts include the instrument and client
 	private Instrument localInstrument;
 	private static long[] quantity = new long[10];
 	private static long[] price = new long[10];
@@ -103,6 +96,10 @@ class CtsBridge {
 		long longInstrument = 4702127773838221344L; // AAPL instrument
 		long randQuantity = 10;	// will be random quantity from 20 to 100
 		long randPrice = 60;	// will be random price in dollars from 75 to 125
+
+		String side;
+		String buySide = new String("B");
+		String sellSide = new String("S");
 		
 		//initialize non-fixed parameter array for test tenders with random values
 		for (i = 0; i < 10; i++)	{
@@ -117,9 +114,18 @@ class CtsBridge {
 		System.out.println("initTenders: initialized array");
 		System.out.println(" #  Quantity   Price");
 		System.out.println("___ ________   ______");
+
 		// DEBUG and the orders to be entered
 		for (i = 0; i < 10; i++)	{
-			System.out.println("  " + i + "    " + quantity[i] + "       " + (price[i]/100));
+			if ( i%2 == 0)	{
+				// even number - sell
+				side = sellSide;
+			} else	{
+				// odd number - buy
+				side = buySide;
+				}
+
+			System.out.println(" " + (1+i) + "   " + side + " " + quantity[i] + "       " + (price[i]/100));
 		}
 	}
 	
@@ -190,5 +196,10 @@ class CtsBridge {
 	public void setInstruments(Instruments instruments) {
 		this.instruments = instruments;
 	}
+	
+	/*
+	 * Methods for calling CtsBridge from the network interface go here
+	 * 
+	 */
 	
 }
