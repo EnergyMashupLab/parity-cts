@@ -20,7 +20,6 @@ import com.paritytrading.parity.net.poe.POEClientListener;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /*
  *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
  *	and EiCanceledTender and error information
@@ -29,80 +28,81 @@ import java.util.List;
  *		orderExecuted
  *		orderCanceled
  *
- *	Events is where events are created based on incoming messages from
- *	Parity system.
+ *	Events is where events are created based on incoming messages
+ *	from Parity system.
  *
- *From Event.java - in common
+ *	From Event.java - in common though there are casting issues
  *      public final long   timestamp;
  *      public final String orderId;
  */
 class Events implements POEClientListener {
 
-    private final List<Event> events;
+	private final List<Event> events;
 
-    Events() {
-        events = new ArrayList<>();
-    }
+	Events() {
+		events = new ArrayList<>();
+	}
 
-    synchronized void accept(EventVisitor visitor) {
-        for (Event event : events)
-            event.accept(visitor);
-    }
+	synchronized void accept(EventVisitor visitor) {
+		for (Event event : events)
+			event.accept(visitor);
+	}
 
-    @Override
-    public void orderAccepted(POE.OrderAccepted message) {
-    	String s = new String(message.orderId);
-    	
-    	System.out.println("start of orderAccepted " + s);
-        add(new Event.OrderAccepted(message));
-    }
+	@Override
+	public void orderAccepted(POE.OrderAccepted message) {
+		String s = new String(message.orderId);
 
-    @Override
-    public void orderRejected(POE.OrderRejected message) {
-    	String s = new String(message.orderId);
-    	
-    	System.out.println("start of orderRejected " + s);
-        add(new Event.OrderRejected(message));
-    }
+		System.out.println("start of orderAccepted " + s);
+		add(new Event.OrderAccepted(message));
+	}
 
-    /*
-     * POE.OrderExecuted.java includes attributes we need:
+	@Override
+	public void orderRejected(POE.OrderRejected message) {
+		String s = new String(message.orderId);
 
-     * 		orderId - maps to CTS OrderId in CtsBridge
-     * 		quantity
-     * 		price
-     * Not used by CTS
-     * 		timestamp
-     * 		liquidityFlag
-     * 		matchNumber
-     */
-    @Override
-    public void orderExecuted(POE.OrderExecuted message) {
-    	String s = new String(message.orderId);
-    	
-    	System.out.println("start of orderExecuted " + s );
-        add(new Event.OrderExecuted(message));
-    }
+		System.out.println("start of orderRejected " + s);
+		add(new Event.OrderRejected(message));
+	}
 
-    @Override
-    public void orderCanceled(POE.OrderCanceled message) {
-    	String s = new String(message.orderId);
-    	
-    	System.out.println("start of orderCanceled " + s);
-        add(new Event.OrderCanceled(message));
-    }
+	/*
+	 * POE.OrderExecuted.java includes attributes we need:
+	 * 
+	 * 		orderId - maps to CTS OrderId in CtsBridge 
+	 * 		quantity 
+	 * 		price 
+	 * Not used by CTS
+	 * 		timestamp
+	 *		liquidityFlag
+	 *		matchNumber
+	 */
+	@Override
+	public void orderExecuted(POE.OrderExecuted message) {
+		String s = new String(message.orderId);
 
-    private synchronized void add(Event event) {
-    	/* DEBUG
-    	String orderId;
-    	long timestamp;
-    	orderId = event.orderId;
-    	timestamp = event.timestamp;
-    	*/
-    	
-    	System.out.println("add event%n");
-        events.add(event);
-    }
+		System.out.println("start of orderExecuted " + s);
+		add(new Event.OrderExecuted(message));
+	}
 
-    
+	@Override
+	public void orderCanceled(POE.OrderCanceled message) {
+		String s = new String(message.orderId);
+
+		System.out.println("start of orderCanceled " + s);
+		add(new Event.OrderCanceled(message));
+	}
+
+	private synchronized void add(Event event) {
+		/*
+		 * DEBUG 
+		 * 		String orderId;
+		 * 		long timestamp;
+		 * 		orderId = event.orderId;
+		 * 		timestamp =
+		 * 		event.timestamp;
+		 */
+
+		System.out.println("add event%n");
+		events.add(event);
+	}
+
 }

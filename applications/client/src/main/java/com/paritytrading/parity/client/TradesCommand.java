@@ -27,7 +27,8 @@ class TradesCommand implements Command {
 	 * WTC execute command including command line scan then pull
 	 * matches (client.getEvents) and print.
 	 * 
-	 * Possible that the TerminalClient tracks events - look for PMD listener
+	 * Possible that the TerminalClient tracks events - look for
+	 * PMD listener
 	 */
 	
 	/*

@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /*
- * PMR is Parity Market Reporting. Seems to require UDP in Parity 0.7.1
+ * PMR is Parity Market Reporting. Apparently requires UDP in Parity 0.7.1
  */
 class TradeProcessor implements PMRListener {
 
