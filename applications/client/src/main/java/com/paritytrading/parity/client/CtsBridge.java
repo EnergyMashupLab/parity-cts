@@ -1,7 +1,5 @@
 package com.paritytrading.parity.client;
 
-//does this statically import all Terminalclient elements, or import only static?
-
 import com.paritytrading.parity.client.TerminalClient.*;
 import com.paritytrading.parity.client.EnterCommand.*;
 
@@ -19,20 +17,6 @@ import java.util.Random;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-//For RestTemplate
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
-
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -82,6 +66,7 @@ class CtsBridge {
 	}
 
 	// set by TerminalClient call to this.setSide()
+	// TODO was public, leaving there for now
 	static private EnterCommand buySide, sellSide; 	
 	static private Instruments instruments;
 	static private TerminalClient client;
@@ -102,7 +87,13 @@ class CtsBridge {
 	// for randomized quantity and price
 	final static Random rand = new Random();	
 	
-	
+	/*
+	 *	TODO	DEFINE map<long, String> to correlate CTS long TenderId
+	 *		and Parity OrderId.
+	 *
+	 * 	Parity OrderId is returned from Order Entry
+	 */
+
 /*
  *		DEBUG Create and Inject 10 random tenders.
  */
@@ -123,7 +114,7 @@ class CtsBridge {
 		String buySide = new String("B");
 		String sellSide = new String("S");
 		
-		//initialize non-fixed parameter array for test tenders with random values
+		//initialize array (with non-fixed fields) for random test tenders
 		for (i = 0; i < 10; i++)	{
 			randQuantity = 20 + rand.nextInt(80);
 			randPrice = 75 + rand.nextInt(50);
@@ -227,6 +218,7 @@ class CtsBridge {
 	static void orderExecuted(POE.OrderExecuted message, String s) {
 		// process orderExecuted
 		// Generate MarketCreateTransactionPayload and send to LME
+		// Side is implicit in the OrderId
 		MarketCreateTransactionPayload marketCreateTransaction = new MarketCreateTransactionPayload
 				(s, message.quantity, message.price, message.matchNumber);
 		System.err.println(marketCreateTransaction.toString());
