@@ -20,7 +20,7 @@ import com.paritytrading.parity.net.poe.POEClientListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.paritytrading.parity.client.CtsBridge
+import com.paritytrading.parity.client.CtsBridge;
 
 /*
  *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
