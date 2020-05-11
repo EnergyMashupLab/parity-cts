@@ -15,6 +15,15 @@ import java.io.*;
  *	This socket server in parity-cts receives and responds to MarketCreateTransaction
  * message and replies with a MarketCreatedTransaction message.
  */
+
+/*
+ * Global constants
+
+public final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
+public final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+ */
+
+
 public class CtsSocketServer {
     private ServerSocket serverSocket;
     private Socket clientSocket;
@@ -24,7 +33,7 @@ public class CtsSocketServer {
     int port = 0;
 
     public void start(int port) {
-    	// System.err.println("CtsSocketServer port: " + port);
+    	System.err.println("CtsSocketServer port: " + port);
     	
         try {
             serverSocket = new ServerSocket(port);
@@ -38,8 +47,7 @@ public class CtsSocketServer {
                 out.println("unrecognised greeting");
             	System.err.println("CtsSocketServer unrecognized greeting " + greeting);
             }
-        } catch (IOException e) {
-        	
+        } catch (IOException e) {       	
             //	LOG.debug(e.getMessage());
         	// ignore
         }
@@ -52,8 +60,8 @@ public class CtsSocketServer {
             clientSocket.close();
             serverSocket.close();
         } catch (IOException e) {
-        	// System.err.println("CtsSocketServer stop: " + e.getMessage());
-//    		logger.info("CtsSocketServer: " + e.getMessage());
+        	//	System.err.println("CtsSocketServer stop: " + e.getMessage());
+        	//	logger.info("CtsSocketServer: " + e.getMessage());
         }
     }
     
@@ -61,9 +69,12 @@ public class CtsSocketServer {
     }
     
     public CtsSocketServer(int port)	{
-    	// System.err.println("CtsSocketServer constructor Port: " + port);
+    	System.err.println("CtsSocketServer constructor Port: " + port);
     	this.port = port;
     	CtsSocketServer server = new CtsSocketServer();
+    	
+    	// TODO Lambda Expression for separate thread
+    	
         server.start(this.port);
     }
 }
