@@ -66,10 +66,19 @@ class CtsBridge {
 	}
 
 	// set by TerminalClient call to this.setSide()
-	// TODO was public, leaving there for now
+	// TODO was public, leaving for now
 	static private EnterCommand buySide, sellSide; 	
 	static private Instruments instruments;
 	static private TerminalClient client;
+	/*
+	 * Start the CtsSocketServer to receive tenders from the LME,
+	 * via client socket send transactions to LME
+	 * 
+	 * This implementation is blocking TODO use asynch
+	 */
+	
+//	static CtsSocketServer ctsSocketServer = new CtsSocketServer(39401);
+
 	/*
 	 * Events may be used for detecting order entered/cancelled, updates from trades.
 	 * This implementation hooks the message entry into the client and calls out to
@@ -197,9 +206,9 @@ class CtsBridge {
 
 	/*
 	 * methods to process POE protocol events - note that the parameter types
-	 * vary. 
+	 * vary across the protocol messsages.
 	 * 
-	 * orderId is String message.orderId for all of the mPOE message types
+	 * orderId is String message.orderId for all of the POE message types
 	 * 
 	 * Order and outoing protocol message are sent by calls to EnterCommand
 	 * buySide and sellSide
@@ -223,7 +232,8 @@ class CtsBridge {
 				(s, message.quantity, message.price, message.matchNumber);
 		System.err.println(marketCreateTransaction.toString());
 		
-		// 	POST marketCreateTransaction to LME TODO
+		// 	Semd via socket marketCreateTransaction to LME TODO
+		// 	Need JSON serialization of the payload
 	}
 	
 	static void orderCanceled(POE.OrderCanceled message, String s) {
