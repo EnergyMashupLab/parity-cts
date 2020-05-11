@@ -15,6 +15,17 @@ import java.io.*;
  *	This socket server in parity-cts receives and responds to MarketCreateTransaction
  * message and replies with a MarketCreatedTransaction message.
  */
+
+
+/*
+ * Global constants
+
+public final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
+public final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+ */
+
+//	TODO run in separate thread
+
 public class CtsSocketServer {
     private ServerSocket serverSocket;
     private Socket clientSocket;
