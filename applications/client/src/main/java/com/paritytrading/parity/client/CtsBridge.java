@@ -51,12 +51,20 @@ import org.apache.logging.log4j.Logger;
 * 		status of orders (which includes matches by which orders are fulfilled)
 */
 
+
 class CtsBridge {	
 
 	public CtsBridge() {
 		//	initTenders();
 		//	sendTenders();
 	}
+	
+	/*
+	 * Global constants in CTS and for CtsBridge
+	 */
+	public final static int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
+	public final static int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+	
 	
 	public CtsBridge(TerminalClient client, Events events, Instruments instruments)	{
 		// store information needed to call EnterCommand.bridgeExecute()
@@ -70,22 +78,22 @@ class CtsBridge {
 	static private EnterCommand buySide, sellSide; 	
 	static private Instruments instruments;
 	static private TerminalClient client;
+
 	/*
 	 * Start the CtsSocketServer to receive tenders from the LME,
 	 * via client socket send transactions to LME
 	 * 
-	 * This implementation is blocking TODO use asynch
+	 * This implementation of CtsSocketServer is blocking TODO use asynch
+	 * in the constructor
 	 */
 	
-//	static CtsSocketServer ctsSocketServer = new CtsSocketServer(39401);
-
+	static CtsSocketServer ctsSocketServer = new CtsSocketServer(LME_PORT);
 	/*
 	 * Events may be used for detecting order entered/cancelled, updates from trades.
 	 * This implementation hooks the message entry into the client and calls out to
 	 * CtsBridge methods.
 	 */
 	Events events;	// local copy if used for evolution
-	
 
 	// arrays for volatile parts of an order via GetCommand.ctsBridgeExecute
 	private Instrument localInstrument;
@@ -126,8 +134,7 @@ class CtsBridge {
 		//initialize array (with non-fixed fields) for random test tenders
 		for (i = 0; i < 10; i++)	{
 			randQuantity = 20 + rand.nextInt(80);
-			randPrice = 75 + rand.nextInt(50);
-			
+			randPrice = 75 + rand.nextInt(50);			
 			quantity[i] = randQuantity;
 			price[i] = randPrice * 100;
 		}
@@ -228,14 +235,50 @@ class CtsBridge {
 		// process orderExecuted
 		// Generate MarketCreateTransactionPayload and send to LME
 		// Side is implicit in the OrderId
+		
+		/*
+		 * TODO use map to determine side of the corresponding EiTender from map
+		 */
 		MarketCreateTransactionPayload marketCreateTransaction = new MarketCreateTransactionPayload
-				(s, message.quantity, message.price, message.matchNumber);
+				(s, message.quantity, message.price, message.matchNumber, SideType.BUY);
 		System.err.println(marketCreateTransaction.toString());
 		
-		// 	Semd via socket marketCreateTransaction to LME TODO
-		// 	Need JSON serialization of the payload
+		// 	Send via socket marketCreateTransactionPayload to LME TODO
+		// 	Need JSON serialization
 	}
 	
+	public Instrument getLocalInstrument() {
+		return localInstrument;
+	}
+
+	public void setLocalInstrument(Instrument localInstrument) {
+		this.localInstrument = localInstrument;
+	}
+
+	public static long[] getQuantity() {
+		return quantity;
+	}
+
+	public static void setQuantity(long[] quantity) {
+		CtsBridge.quantity = quantity;
+	}
+
+	public static long[] getPrice() {
+		return price;
+	}
+
+	public static void setPrice(long[] price) {
+		CtsBridge.price = price;
+	}
+
+	public static String[] getOrderIds() {
+		return orderIds;
+	}
+
+	public static void setOrderIds(String[] orderIds) {
+		CtsBridge.orderIds = orderIds;
+	}
+
 	static void orderCanceled(POE.OrderCanceled message, String s) {
 		// process orderCanceled - FUTURE
 		// Generate MarketCanceledTenderPayload and send to LME
