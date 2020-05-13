@@ -86,8 +86,9 @@ class CtsBridge {
 	 * This implementation of CtsSocketServer is blocking TODO use asynch
 	 * in the constructor
 	 */
+	static CtsSocketServer ctsSocketServer;
 	
-	static CtsSocketServer ctsSocketServer = new CtsSocketServer(LME_PORT);
+	
 	/*
 	 * Events may be used for detecting order entered/cancelled, updates from trades.
 	 * This implementation hooks the message entry into the client and calls out to
@@ -117,12 +118,18 @@ class CtsBridge {
 	void run()	{
 		initTenders();
 		sendTenders();
+		System.err.println("run() before new CtsSocketServer");	// initial example - ends after one response
+		ctsSocketServer = new CtsSocketServer(MARKET_PORT);
+		System.err.println("run() after new CtsSocketServer");
 	}
 	
 	void initTenders()	{
 		int i;
 		
 		// CTS price * 10 **2 decimal places 119 == Parity price 11900
+		// minimum increment price is 1 cent
+		
+		
 		long longInstrument = 4702127773838221344L; // AAPL instrument
 		long randQuantity = 10;	// will be random quantity from 20 to 100
 		long randPrice = 60;	// will be random price in dollars from 75 to 125

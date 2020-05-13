@@ -103,7 +103,7 @@ class Events implements POEClientListener {
 		 * 		event.timestamp;
 		 */
 
-		System.out.println("add event%n");
+		System.out.println("events.add(event)");
 		events.add(event);
 	}
 

@@ -19,8 +19,8 @@ import java.io.*;
 /*
  * Global constants
 
-public final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
-public final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+public static final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
+public static final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
  */
 
 
@@ -33,7 +33,8 @@ public class CtsSocketServer {
     int port = 0;
 
     public void start(int port) {
-    	System.err.println("CtsSocketServer port: " + port);
+    	System.err.println("CtsSocketServer: start head; port: " + port);
+    	
     	
         try {
             serverSocket = new ServerSocket(port);
@@ -41,15 +42,27 @@ public class CtsSocketServer {
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String greeting = in.readLine();
-            if ("hello server".equals(greeting))
-                out.println("hello client");
-            else	{
-                out.println("unrecognised greeting");
-            	System.err.println("CtsSocketServer unrecognized greeting " + greeting);
+            
+//            System.err.println("Length of constant '" + "hello server" + " is " + "hello server".length());
+//            System.err.println("Length of greeting read '" + greeting + "' is " + greeting.length());
+            
+//            System.err.println("CtsSocketServer: after in.readLn in start. greeting: '" + greeting + "'");
+            if ("hello server".equals(greeting))	{
+                out.println("CtsSocketServer: hello client");
+           		System.err.println("CtsSocketServer: unrecognized greeting '" + greeting + "'");
+            }	else	{
+            	
+            	// try the reverse
+            	if (greeting.equals("hellow server"))	{
+            		System.err.println("reverse shows true!");
+            	}
+            	
+                out.println("unrecognised greeting"); // back to client
+            	System.err.println("CtsSocketServer: unrecognized greeting '" + greeting + "'");
             }
         } catch (IOException e) {       	
             //	LOG.debug(e.getMessage());
-        	// ignore
+        	//	ignore
         }
     }
 
@@ -60,7 +73,7 @@ public class CtsSocketServer {
             clientSocket.close();
             serverSocket.close();
         } catch (IOException e) {
-        	//	System.err.println("CtsSocketServer stop: " + e.getMessage());
+        	System.err.println("CtsSocketServer stop: " + e.getMessage());
         	//	logger.info("CtsSocketServer: " + e.getMessage());
         }
     }
@@ -69,7 +82,7 @@ public class CtsSocketServer {
     }
     
     public CtsSocketServer(int port)	{
-    	System.err.println("CtsSocketServer constructor Port: " + port);
+    	System.err.println("CtsSocketServer: constructor Port: " + port);
     	this.port = port;
     	CtsSocketServer server = new CtsSocketServer();
     	

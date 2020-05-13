@@ -20,12 +20,12 @@ import org.apache.logging.log4j.Logger;
  * 
  * Global values in CtsBridge and in CTS
 
-public final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
-public final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+public final int LME_PORT = 39401;		// Socket Client in CtsBridge to Server in LME reads CreateTransaction
+public final int MARKET_PORT = 39402;	// Socket Server in Market reads CreateTender 
  */
 
 //	TODO run in separate thread
-// TODO TEMP use external client initially. This one to contact LME with Transactions
+// 	TODO TEMP use external client initially. This one to contact LME with Transactions
 
 
 public class CtsSocketClient {
