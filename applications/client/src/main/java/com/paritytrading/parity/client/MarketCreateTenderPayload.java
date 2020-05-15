@@ -8,29 +8,32 @@ import java.time.Instant;
  * mapped and inserted in the market engine
  * 
  * Information is from an EiCreateTenderPayload received from the LMA
- * and used as contructor parameters by the LME Actor.
+ * and used as constructor parameters by the LME Actor.
  */
 
-public class MarketCreateTenderPayload {
-	
+public class MarketCreateTenderPayload {	
 	protected String info = "MarketCreateTenderPayload";
 	protected SideType side;
 	protected long quantity;
 	protected long price;
 	protected long ctsTenderId;
-	protected Instant expireTime;
+	protected Instant expireTime = null;
 
 	MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, Instant expireTime)	{
 		/*
 		 * Ensure that the number of decimal fraction digits
-		 * in price and quantity align with the global one which is presently 3
-		 * 
-		 * This converts from the external price, e.g. one dollar is 1000L
+		 * in price and quantity align with the global one which is planned to be 3
 		 */
 		this.side = side;
 		this.quantity = quantity;
 		this.price = price;
+		this.ctsTenderId = ctsTenderId;
+		this.expireTime = expireTime;
 //		System.err.println(this.toString());
+	}
+	
+	// Default constructor for JSON
+	MarketCreateTenderPayload()	{
 	}
 	
 	@Override
@@ -43,14 +46,25 @@ public class MarketCreateTenderPayload {
 		return (info + " side " + tempString + " quantity " +
 				quantity + " price " + price);
 	}
-
-	public Instant getExpireTime() {
-		return expireTime;
-	}
-
-	public void setExpireTime(Instant expireTime) {
-		this.expireTime = expireTime;
-	}
+	
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MarketCreateTenderPayload tenderPayload = (MarketCreateTenderPayload) o;
+        
+        return	info.equals(tenderPayload.info) 	&&
+        		side == tenderPayload.side 			&&
+        		quantity == tenderPayload.quantity 	&&
+        		price == tenderPayload.price		&&
+        		ctsTenderId == tenderPayload.ctsTenderId;
+        	// failed, debug ok
+        	//	&& expireTime.equals(tenderPayload.expireTime);
+    }
 
 	public String getInfo() {
 		return info;
@@ -90,5 +104,14 @@ public class MarketCreateTenderPayload {
 
 	public void setCtsTenderId(long ctsTenderId) {
 		this.ctsTenderId = ctsTenderId;
-	}	
+	}
+
+	public Instant getExpireTime() {
+		return expireTime;
+	}
+
+	public void setExpireTime(Instant expireTime) {
+		this.expireTime = expireTime;
+	}
+    
 }

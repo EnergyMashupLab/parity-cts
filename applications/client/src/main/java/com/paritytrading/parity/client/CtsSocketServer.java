@@ -5,6 +5,21 @@ import com.paritytrading.parity.client.EnterCommand.*;
 
 import java.net.*;
 import java.io.*;
+import java.lang.Runnable;
+import java.lang.Thread;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.ser.std.*;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.AbstractQueue;
+import java.util.AbstractCollection;
+import java.util.concurrent.ArrayBlockingQueue;
+
 
 //	import org.apache.logging.log4j.LogManager;
 //  import org.apache.logging.log4j.Logger;
@@ -16,51 +31,41 @@ import java.io.*;
  * message and replies with a MarketCreatedTransaction message.
  */
 
-/*
- * Global constants
-
-public static final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
-public static final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
- */
-
-
-public class CtsSocketServer {
+public class CtsSocketServer	{
     private ServerSocket serverSocket;
     private Socket clientSocket;
     private PrintWriter out;
 //	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
     private BufferedReader in;
-    int port = 0;
+    public static final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
+    public static final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+    public final int port = MARKET_PORT;
+    String jsonReceived = null;
+    MarketCreateTenderPayload payload;
+    final ObjectMapper mapper = new ObjectMapper();
+    CtsBridge bridge;
+    ArrayBlockingQueue<MarketCreateTenderPayload> socketServerCreateTenderQ = new ArrayBlockingQueue<>(100);
 
-    public void start(int port) {
+    public void start() {
+    	// did have parameter port; constant for this class in Parity client
     	System.err.println("CtsSocketServer: start head; port: " + port);
-    	
     	
         try {
             serverSocket = new ServerSocket(port);
             clientSocket = serverSocket.accept();
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            String greeting = in.readLine();
-            
-//            System.err.println("Length of constant '" + "hello server" + " is " + "hello server".length());
-//            System.err.println("Length of greeting read '" + greeting + "' is " + greeting.length());
-            
-//            System.err.println("CtsSocketServer: after in.readLn in start. greeting: '" + greeting + "'");
-            if ("hello server".equals(greeting))	{
-                out.println("CtsSocketServer: hello client");
-           		System.err.println("CtsSocketServer: unrecognized greeting '" + greeting + "'");
-            }	else	{
-            	
-            	// try the reverse
-            	if (greeting.equals("hellow server"))	{
-            		System.err.println("reverse shows true!");
-            	}
-            	
-                out.println("unrecognised greeting"); // back to client
-            	System.err.println("CtsSocketServer: unrecognized greeting '" + greeting + "'");
-            }
-        } catch (IOException e) {       	
+
+            while (true)	{
+                jsonReceived = in.readLine(); // sent by LME with ClientCreateTenderPayload
+                System.err.println("CtsSocketServer: start: jsonReceived is '" + jsonReceived);
+                payload = mapper.readValue(jsonReceived, MarketCreateTenderPayload.class);
+                System.err.println("payload received object: " + payload.toString());
+                // and add to the CtsBridge queue for processing
+                bridge.createTenderQ.add(payload);
+    		}
+             
+        } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());
         	//	ignore
         }
@@ -83,11 +88,27 @@ public class CtsSocketServer {
     
     public CtsSocketServer(int port)	{
     	System.err.println("CtsSocketServer: constructor Port: " + port);
-    	this.port = port;
+    	
     	CtsSocketServer server = new CtsSocketServer();
     	
-    	// TODO Lambda Expression for separate thread
+    	// TODO Lambda Expression for separate thread - alt implements runnable, place in thread//
     	
-        server.start(this.port);
+        server.start();
     }
+    
+    public CtsSocketServer(int port, CtsBridge bridge)	{
+    	System.err.println("CtsSocketServer: constructor Port: " + port);
+    	//	this.socketServerCreateTenderQ = bridgeQ;
+    	this.bridge = bridge;
+    	if (bridge == null)	{
+    		System.err.println("CtsSocketServer: constructor:this.bridge is null");
+    	}
+    	
+    	CtsSocketServer server = new CtsSocketServer();
+    	
+    	// TODO Lambda Expression for separate thread - alt implements runnable, place in thread//
+    	
+        server.start();
+    }
+    
 }

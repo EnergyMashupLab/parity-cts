@@ -8,9 +8,9 @@ package com.paritytrading.parity.client;
 
 public class MarketCreatedTenderPayload {
 	long ctsTenderId;
-	public Boolean success = false;
-	protected String info = "ClientCreatedTenderPayload";
-	protected String parityOrderId;	// debug. Mapping in CtsBridge
+	public Boolean success = false;	// Ensure set properly
+	private String info = "ClientCreatedTenderPayload";
+	private String parityOrderId;	// debug. Mapping in CtsBridge
 	
 	public String getParityOrderId() {
 		return parityOrderId;
@@ -26,6 +26,12 @@ public class MarketCreatedTenderPayload {
 	
 	MarketCreatedTenderPayload(long id){
 		ctsTenderId = id;
+		this.success = true;
+	}
+	
+	MarketCreatedTenderPayload(long ctsTenderId, String parityOrderId)	{
+		this.ctsTenderId = ctsTenderId;
+		this.parityOrderId = parityOrderId;
 		this.success = true;
 	}
 	
