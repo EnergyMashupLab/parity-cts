@@ -2,6 +2,9 @@ package com.paritytrading.parity.client;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.*;
+
+import com.paritytrading.parity.client.CtsInterval;
 
 /*
  * Sent by the LME to the Market with information to be
@@ -12,14 +15,16 @@ import java.time.Instant;
  */
 
 public class MarketCreateTenderPayload {	
-	protected String info = "MarketCreateTenderPayload";
-	protected SideType side;
-	protected long quantity;
-	protected long price;
-	protected long ctsTenderId;
-	protected Instant expireTime = null;
+	private String info = "MarketCreateTenderPayload";
+	private SideType side;
+	private long quantity;
+	private long price;
+	private long ctsTenderId;
+	// TODO in NIST-CTS-Agents - needs interval and expireTime
+	BridgeInterval bridgeInterval;
+	BridgeInstant expireTime;
 
-	MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, Instant expireTime)	{
+	MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, CtsInterval interval, Instant expireTime)	{
 		/*
 		 * Ensure that the number of decimal fraction digits
 		 * in price and quantity align with the global one which is planned to be 3
@@ -28,7 +33,10 @@ public class MarketCreateTenderPayload {
 		this.quantity = quantity;
 		this.price = price;
 		this.ctsTenderId = ctsTenderId;
-		this.expireTime = expireTime;
+		this.bridgeInterval = new BridgeInterval(interval);
+		this.expireTime = new BridgeInstant(expireTime);
+		
+		
 //		System.err.println(this.toString());
 	}
 	
@@ -106,12 +114,21 @@ public class MarketCreateTenderPayload {
 		this.ctsTenderId = ctsTenderId;
 	}
 
-	public Instant getExpireTime() {
+	public BridgeInterval getBridgeInterval() {
+		return bridgeInterval;
+	}
+
+	public void setBridgeInterval(BridgeInterval bridgeInterval) {
+		this.bridgeInterval = bridgeInterval;
+	}
+
+	public BridgeInstant getExpireTime() {
 		return expireTime;
 	}
 
-	public void setExpireTime(Instant expireTime) {
+	public void setExpireTime(BridgeInstant expireTime) {
 		this.expireTime = expireTime;
 	}
-    
+
+	
 }

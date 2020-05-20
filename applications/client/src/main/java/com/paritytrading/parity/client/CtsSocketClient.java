@@ -6,23 +6,38 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+
 /*
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 */
 
 /*
- * Start by new CtsSocketClient.startConnection(("127.0.0.1", LME_PORT)
+ * 	This socket client is for communication to/from the LME for MarketCreateTransactionPayload
+ * 
+ * 	The payloads are expected to be already serialized in JSON. LME opens CtsSocketServer on
+ * 	port 39401: CtsSocketClient.startConnection(("127.0.0.1", LME_PORT)
+ * 
+ *  CtsBridge when an orderExecuted is invoked from the POE protocol engine in parity-client;
+ *  this will generate two or more MarketCreateTransactionPayloads (one for each party engaged
+ *  in the market trade) and send them one at a time into the CTS system via the LME.
+ *  
+ *  TODO these messages could be bundled, to avoid additional network traffic
  *	
- *	Insert into LmeRestController to receive Tender information
+ *	Insert into LmeRestController to receive information
  *	and generate EiCreateTransaction with new TransactionId, using the
- * Tenderid passed from CtsBridge
+ * 	Tenderid passed from CtsBridge
  * 
  * Global values in CtsBridge and in CTS
 
-public final int LME_PORT = 39401;		// Socket Client in CtsBridge to Server in LME reads CreateTransaction
+public final int LME_PORT = 39401;		// Socket Client in CtsBridge sends MarketCreateTransaction
+										//		to ServerSocket in LME reads CreateTransaction
 public final int MARKET_PORT = 39402;	// Socket Server in Market reads CreateTender 
  */
+
+
 
 //	TODO run in separate thread
 // 	TODO TEMP use external client initially. This one to contact LME with Transactions

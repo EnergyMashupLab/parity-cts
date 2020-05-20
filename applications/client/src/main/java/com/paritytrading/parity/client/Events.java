@@ -54,7 +54,7 @@ class Events implements POEClientListener {
 	public void orderAccepted(POE.OrderAccepted message) {
 		String s = new String(message.orderId);
 
-		System.out.println("start of orderAccepted " + s);
+		System.out.println("Events: start of orderAccepted " + s);
 		add(new Event.OrderAccepted(message));
 	}
 
@@ -62,7 +62,7 @@ class Events implements POEClientListener {
 	public void orderRejected(POE.OrderRejected message) {
 		String s = new String(message.orderId);
 
-		System.out.println("start of orderRejected " + s);
+		System.out.println("Events: start of orderRejected " + s);
 		add(new Event.OrderRejected(message));
 	}
 
@@ -81,7 +81,7 @@ class Events implements POEClientListener {
 	public void orderExecuted(POE.OrderExecuted message) {
 		String s = new String(message.orderId);
 
-		System.out.println("start of orderExecuted " + s);
+		System.out.println("Events: start of orderExecuted " + s);
 		add(new Event.OrderExecuted(message));
 	}
 
@@ -89,7 +89,7 @@ class Events implements POEClientListener {
 	public void orderCanceled(POE.OrderCanceled message) {
 		String s = new String(message.orderId);
 
-		System.out.println("start of orderCanceled " + s);
+		System.out.println("Events: start of orderCanceled " + s);
 		add(new Event.OrderCanceled(message));
 	}
 
@@ -103,7 +103,7 @@ class Events implements POEClientListener {
 		 * 		event.timestamp;
 		 */
 
-		System.out.println("events.add(event)");
+		// System.out.println("events.add(event)");
 		events.add(event);
 	}
 

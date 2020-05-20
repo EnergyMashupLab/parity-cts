@@ -65,19 +65,12 @@ class TerminalClient implements Closeable {
     static final String[] COMMAND_NAMES = Stream.of(COMMANDS)
             .map(Command::getName)
             .toArray(String[]::new);
-
     static final Locale LOCALE = Locale.US;
-
     static final long NANOS_PER_MILLI = 1_000_000;
-
     private final Events events;
-
     private final OrderEntry orderEntry;
-
     private final Instruments instruments;
-
     private final OrderIDGenerator orderIdGenerator;
-
     private boolean closed;
 
     private TerminalClient(Events events, OrderEntry orderEntry,
@@ -116,7 +109,7 @@ class TerminalClient implements Closeable {
          * 
          * Captured the new TerminalClient from this static routine for CtsBridge.
          * 
-         * Extract the buy and sell side EnterCommand objects and set their ref to ctsBridge
+         * Extract the buy and sell side EnterCommand objects and set their ref in ctsBridge
          */      
          ctsBridge = new CtsBridge(terminalClient, events, instruments);
          
@@ -129,7 +122,8 @@ class TerminalClient implements Closeable {
          
          ctsBridge.setBuySide(buy);
          ctsBridge.setSellSide(sell);
-         ctsBridge.run();
+         // and start the CtsBridge thread
+         ctsBridge.start();
          
          // and return the constructed terminalClient
          return terminalClient;

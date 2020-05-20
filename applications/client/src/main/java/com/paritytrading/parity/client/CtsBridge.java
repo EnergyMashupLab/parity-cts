@@ -16,6 +16,9 @@ import java.util.Random;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.*;
+import com.fasterxml.jackson.datatype.jsr310.*;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 //	import org.apache.logging.log4j.LogManager;
@@ -31,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.AbstractQueue;
 import java.util.AbstractCollection;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /*
@@ -64,11 +68,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 */
 
 
-class CtsBridge {	
+class CtsBridge extends Thread {	
 
 	public CtsBridge() {
-		//	initTenders();
-		//	sendTenders();
 	}
 	
 	/*
@@ -90,6 +92,8 @@ class CtsBridge {
 	static private EnterCommand buySide, sellSide; 	
 	static private Instruments instruments;
 	static private TerminalClient client;
+	
+	static final Boolean DEBUG_JSON = false;
 
 	/*
 	 * Start the CtsSocketServer to receive tenders from the LME,
@@ -139,30 +143,50 @@ class CtsBridge {
 /*
  *		DEBUG Create and Inject 10 random tenders.
  */
-	void run()	{
+	@Override
+	public void run()	{
 		initTenders();
 		sendTenders();
 		
-		//	JsonWork below
-		
 		// initial example - ends after one response
-		System.err.println("run() before new CtsSocketServer");	
-		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this);
-		System.err.println("run() after new CtsSocketServer");
+
+		/*
+		 *  Read from createTenderQ, after paylod processing call
+		 *  bridgeExecute to 
+		 *  
+		 *  thread each to
+		 *  	read from createTenderQ (received from LME)
+		 *  	write to createTransactionQ (to send to LME)
+		 *  
+		 *  processing of CreateTenderPayload is a call to bridgeExecute to put
+		 *  Tender on NIO queue in Parity Client so need not be in separate thread    
+		 */
+
+		if (DEBUG_JSON) System.err.println("CtsBridge run before new SocketServer: currentThread name: '" + Thread.currentThread().getName() + "'");
+		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this);	// separate thread for MarketCreateTenderPayloads
+		ctsSocketServer.start();
 		
 		while (true) {
-			// poll() the ArraylLockingQueue
+			// take() (blocking) from the ArrayBlockingQueue
 			
-			if (createTenderQ.size() < 1)	{
+			// TODO nothing filling queue right now, but will be CtsSocketServer thread
+			
+		
 			System.err.println("CtsBridge:run: CreateTenderQ size " + createTenderQ.size());
-			}
+	
 			
-			createTender = createTenderQ.poll();
+			try {
+				createTender = createTenderQ.take();
+			} catch (InterruptedException e1) {
+				System.err.println("Interrupted while waiting on createTenderQ");
+				e1.printStackTrace();
+			}
 			// process the removed MarketCreateTenderPayload
 			if (createTender == null)	{
 				System.err.println("CtsBridge:run: tender is null");
 			}
 			
+			// replace with conditional expression for buySide/sellSie
 			if ( createTender.getSide() == SideType.BUY)	{
 				 try	{
 					tempParityOrderId = buySide.bridgeExecute
@@ -180,141 +204,13 @@ class CtsBridge {
 				} catch (IOException e) {
 					 System.out.println("error: CtsBridge: Connection closed"); 
 				}
-			
-			
+						
 			// iterate
 			
 				}
 		}
 	}
 	
-	void initTenders()	{
-		int i;
-		
-		// CTS price * 10 **2 decimal places 119 == Parity price 11900
-		// minimum increment price is 1 cent
-		
-		
-		long longInstrument = 4702127773838221344L; // AAPL instrument
-		long randQuantity = 10;	// will be random quantity from 20 to 100
-		long randPrice = 60;	// will be random price in dollars from 75 to 125
-		final long constantCtsTenderId = 91L;
-		Instant dtStart;
-		final ObjectMapper mapper = new ObjectMapper();
-		SideType tempSide;
-
-
-		String side;
-		String buySide = new String("B");	// flag to send order to the right place
-		String sellSide = new String("S");	// flag to send order to the right place
-		
-		dtStart = Instant.parse("2020-05-15T10:00:00.00Z");
-		
-		//	initialize array (with non-fixed fields) for random test tenders
-		// 	build parallel arrays of incoming MarketCreateTenderPayloads,
-		//	JSON serialization, and deserialized Payloads
-		for (i = 0; i < 10; i++)	{
-			randQuantity = 20 + rand.nextInt(80);
-			randPrice = 75 + rand.nextInt(50);			
-			quantity[i] = randQuantity;
-			price[i] = randPrice * 100; // two decimal place
-			
-			//	ctsTenderId passed in use constant here
-			//	parallel array, with JSON serialization in parallel array json[10]
-			
-			if ( i%2 == 0)	{
-				// even number - sell
-				tempSide = SideType.SELL;
-			} else	{
-				// odd number - buy
-				tempSide = SideType.BUY;
-				}
-			
-			// MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, Instant expireTime)
-			createTenderPayload[i] = new MarketCreateTenderPayload(tempSide, quantity[i], price[i], 91, dtStart);
-			try	{
-				json[i] = mapper.writeValueAsString(createTenderPayload[i]);
-				deserializedTenderPayload[i] = mapper.readValue(json[i], MarketCreateTenderPayload.class);
-				System.err.println("CtsBridge: Compare original and roundtrip MarketCreateTenderPayload equals = " 
-						+ createTenderPayload[i].equals(deserializedTenderPayload[i]));	// dropped expirationTime in compare
-			}	catch (JsonProcessingException e)	{
-				System.err.println("CtsBridge:initTenders: JsonProcessingException " + e);
-				}	
-			// and print the json
-			System.err.println(json[i]);
-			}
-		
-		
-		// DEBUG print the headers
-		System.out.println("initTenders: initialized array");
-		System.out.println(" #  Quantity   Price");
-		System.out.println("___ ________   ______");
-
-		// DEBUG and the orders to be entered
-		for (i = 0; i < 10; i++)	{
-			if ( i%2 == 0)	{
-				// even number - sell
-				side = sellSide;
-			} else	{
-				// odd number - buy
-				side = buySide;
-				}
-			System.out.println(" " + (1+i) + "   " + side + " " + quantity[i] + "       " + (price[i]/100));
-		}
-	}
-	
-	void sendTenders()	{
-		// CTS price * 10 **2 decimal places 119 == Parity price 11900
-		int i;
-		long longInstrument = 4702127773838221344L; // AAPL instrument
-			
-		for (i= 0; i < 10; i++)	{
-			//choose buy or sell side by modular arithmetic
-			if ( i%2 == 0)	{
-				// even number - sell
-				 try	{
-					 orderIds[i] = sellSide.bridgeExecute
-							 (getClient(), quantity[i],
-							 longInstrument,price[i]);
-				 } catch (IOException e) {
-					 System.out.println("error: CtsBridge: Connection closed");
-				 }	
-			} else	{
-				// odd number - buy
-				try	{
-					orderIds[i] = buySide.bridgeExecute(
-								client, quantity[i],
-								longInstrument, price[i]);
-				} catch (IOException e) {
-					 System.out.println("error: CtsBridge: Connection closed");
-				}
-			}
-			System.out.println();
-		}
-	}
-	
-	/*
-	 * 	Called from POST handler for MarketCreateTenderPayload
-	 */
-	static void enterOrder(SideType side, long quantity, long instrument, long price)	{
-		String parityOrderId;
-		
-		if ( side == SideType.BUY)	{	//	Buy
-			 try	{
-				 parityOrderId = sellSide.bridgeExecute(
-						 getClient(), quantity, instrument,price);
-			 } catch (IOException e) {
-				 System.out.println("error: CtsBridge: Connection closed");
-			 }	
-		} else	{	// Sell
-			try	{
-				parityOrderId = buySide.bridgeExecute(
-						getClient(), quantity, instrument, price);
-			} catch (IOException e) {
-				 System.out.println("error: CtsBridge: Connection closed");
-			}
-		}
-	}
 
 	/*
 	 * methods to process POE protocol events - note that the parameter types
@@ -434,5 +330,151 @@ class CtsBridge {
 	 * Methods for calling CtsBridge from the network interface go here
 	 * 
 	 */
+	
+	void initTenders()	{
+		int i;
+		
+		// CTS price * 10 **2 decimal places 119 == Parity price 11900
+		// minimum increment price is 1 cent
+		
+		
+		long longInstrument = 4702127773838221344L; // AAPL instrument
+		long randQuantity = 10;	// will be random quantity from 20 to 100
+		long randPrice = 60;	// will be random price in dollars from 75 to 125
+		final long constantCtsTenderId = 91L;
+		Instant dtStart;	// start of interval
+		CtsInterval ctsInterval;
+		Instant expireTime;
+		final ObjectMapper mapper = new ObjectMapper();
+		
+		//	First try to fix bugs with Jackson java.time
+		//	mapper.findAndRegisterModules(); 
+		// mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false); done in application.properties
+		
+		SideType tempSide;
+
+
+		String side;
+		String buySide = new String("B");	// flag to send order to the right place
+		String sellSide = new String("S");	// flag to send order to the right place
+		
+		dtStart = Instant.parse("2020-05-20T10:00:00.00Z");
+		// and create our 60 minute interval
+		ctsInterval = new CtsInterval(60, dtStart);
+		expireTime = dtStart.plusSeconds(60*60*11);	// DEBUG eleven hours after start
+		
+		if (DEBUG_JSON) System.err.println("after expireTime set expireTime " + expireTime.toString() + "dtStart " + dtStart.toString());
+		
+		//	initialize array (with non-fixed fields) for random test tenders
+		// 	build parallel arrays of incoming MarketCreateTenderPayloads,
+		//	JSON serialization, and deserialized Payloads
+		for (i = 0; i < 10; i++)	{
+			randQuantity = 20 + rand.nextInt(80);
+			randPrice = 75 + rand.nextInt(50);			
+			quantity[i] = randQuantity;
+			price[i] = randPrice * 100; // two decimal place
+			
+			//	ctsTenderId passed in use constant here
+			//	parallel array, with JSON serialization in parallel array json[10]
+			
+			if ( i%2 == 0)	{
+				// even number - sell
+				tempSide = SideType.SELL;
+			} else	{
+				// odd number - buy
+				tempSide = SideType.BUY;
+				}
+			
+			// MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, CtsInterval interval, Instant expireTime)
+			createTenderPayload[i] = new MarketCreateTenderPayload(tempSide, quantity[i], price[i], 91, ctsInterval, dtStart);
+			try	{
+				if (DEBUG_JSON) System.err.println("try block line 252 before serialization/deserialization. i = " + i);
+				json[i] = mapper.writeValueAsString(createTenderPayload[i]);
+				
+				deserializedTenderPayload[i] = mapper.readValue(json[i], MarketCreateTenderPayload.class);
+				
+				if (DEBUG_JSON) System.err.println("CtsBridge: Compare original and roundtrip MarketCreateTenderPayload equals = " 
+						+ createTenderPayload[i].equals(deserializedTenderPayload[i]));	// dropped expirationTime in compare
+			}	catch (JsonProcessingException e)	{
+				System.err.println("CtsBridge:initTenders: JsonProcessingException " + e);
+				
+				}	
+			// and print the json
+			if (DEBUG_JSON) System.err.println("***" + json[i] + "***");
+			}
+		
+		
+
+			// DEBUG print the headers
+			if (DEBUG_JSON)System.out.println("initTenders: initialized array");
+			System.out.println(" #  Quantity   Price");
+			System.out.println("___ ________   ______");
+	
+			// DEBUG and the orders to be entered
+			for (i = 0; i < 10; i++)	{
+				if ( i%2 == 0)	{
+					// even number - sell
+					side = sellSide;
+				} else	{
+					// odd number - buy
+					side = buySide;
+					}
+				System.out.println((i < 9 ? "  " : " ") + (1+i) + "   " + side + " " + quantity[i] + "       " + (price[i]/100));
+			}
+		
+	}
+	
+	void sendTenders()	{
+		// CTS price * 10 **2 decimal places 119 == Parity price 11900
+		int i;
+		long longInstrument = 4702127773838221344L; // AAPL instrument
+			
+		for (i= 0; i < 10; i++)	{
+			//choose buy or sell side by modular arithmetic
+			if ( i%2 == 0)	{
+				// even number - sell
+				 try	{
+					 orderIds[i] = sellSide.bridgeExecute
+							 (getClient(), quantity[i],
+							 longInstrument,price[i]);
+				 } catch (IOException e) {
+					 System.out.println("error: CtsBridge: Connection closed");
+				 }	
+			} else	{
+				// odd number - buy
+				try	{
+					orderIds[i] = buySide.bridgeExecute(
+								client, quantity[i],
+								longInstrument, price[i]);
+				} catch (IOException e) {
+					 System.out.println("error: CtsBridge: Connection closed");
+				}
+			}
+			System.out.println();
+		}
+	}
+	
+	/*
+	 * 	Called from POST handler for MarketCreateTenderPayload
+	 */
+	static void enterOrder(SideType side, long quantity, long instrument, long price)	{
+		String parityOrderId;
+		
+		if ( side == SideType.BUY)	{	//	Buy
+			 try	{
+				 parityOrderId = sellSide.bridgeExecute(
+						 getClient(), quantity, instrument,price);
+			 } catch (IOException e) {
+				 System.out.println("error: CtsBridge: Connection closed");
+			 }	
+		} else	{	// Sell
+			try	{
+				parityOrderId = buySide.bridgeExecute(
+						getClient(), quantity, instrument, price);
+			} catch (IOException e) {
+				 System.out.println("error: CtsBridge: Connection closed");
+			}
+		}
+	}
 	
 }
