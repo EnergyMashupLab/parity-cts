@@ -148,15 +148,19 @@ class TerminalClient implements Closeable {
     /*
      * WTC getters for Buy, Sell EnterCommand instances
      * 
-     * EnterCommand.linkExecute() allows calls from
-     * CtsBridge class, returning String orderId
+     * EnterCommand.bridgeExecute() allows order entry from
+     * CtsBridge, returning String orderId
      * 
-     * Note that POE protocol includes messages from server to use to
-     * generate CTS transaction
-     * 		Order Entered (taken by System)
-     * 		Order Added (put into correct Order Book
-     * 		Order Canceled (for future CTS EiCancelTender
-     * 		Trade (showing resting and incoming order numbers)
+     * Note that POE protocol includes messages from server. These are
+     * in Events and Event, and call to CtsBridge.
+     * 
+     * This integration package uses Order Executed and soon will
+     * use Order Canceled
+     * 		Order Entered (order entered by System)
+     * 		Order Added (order put into correct Order Book
+     * 		* Order Canceled (order canceled for future CTS EiCancelTender
+     * 		* Order Executed (one message per order, for resting order(s) and incoming
+     * 				order numbers and preparing MarketCreateTransactionPayload)
      */
     public TerminalClient getClient()	{
     	return this;

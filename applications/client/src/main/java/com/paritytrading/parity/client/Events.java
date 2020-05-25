@@ -54,7 +54,9 @@ class Events implements POEClientListener {
 	public void orderAccepted(POE.OrderAccepted message) {
 		String s = new String(message.orderId);
 
+		// HOOK - Insert call to CtsBridge as needed
 		System.out.println("Events: start of orderAccepted " + s);
+		
 		add(new Event.OrderAccepted(message));
 	}
 
@@ -62,6 +64,7 @@ class Events implements POEClientListener {
 	public void orderRejected(POE.OrderRejected message) {
 		String s = new String(message.orderId);
 
+		// HOOK - Insert call to CtsBridge as needed
 		System.out.println("Events: start of orderRejected " + s);
 		add(new Event.OrderRejected(message));
 	}
@@ -73,7 +76,7 @@ class Events implements POEClientListener {
 	 * 		quantity 
 	 * 		price 
 	 * Not used by CTS
-	 * 		timestamp
+	 * 		timestamp (on message)
 	 *		liquidityFlag
 	 *		matchNumber
 	 */
@@ -81,7 +84,12 @@ class Events implements POEClientListener {
 	public void orderExecuted(POE.OrderExecuted message) {
 		String s = new String(message.orderId);
 
+		// HOOK - Insert call to CtsBridge as needed
 		System.out.println("Events: start of orderExecuted " + s);
+		
+		// Callout to CtsBridge for processing
+		CtsBridge.orderExecuted(message, s);
+		
 		add(new Event.OrderExecuted(message));
 	}
 
@@ -89,6 +97,7 @@ class Events implements POEClientListener {
 	public void orderCanceled(POE.OrderCanceled message) {
 		String s = new String(message.orderId);
 
+		// HOOK - Insert call to CtsBridge as needed
 		System.out.println("Events: start of orderCanceled " + s);
 		add(new Event.OrderCanceled(message));
 	}

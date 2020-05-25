@@ -133,9 +133,9 @@ class EnterCommand implements Command {
     }
 
     /*
-     * WTC For calls from CtsBridge class to equivalent of EnterCommand private
-     * execute. This version returns String form of orderId to allow caching
-     * to Parity orderIds.
+     * WTC For calls from CtsBridge to equivalent of EnterCommand private
+     * execute. This version returns String form of orderId to allow mapping
+     * to and from Parity orderIds.
      */
     public String bridgeExecute(TerminalClient client, long quantity, long instrument,
     		long price) throws IOException {
@@ -157,7 +157,7 @@ class EnterCommand implements Command {
         client.getOrderEntry().send(message);
 
         /*
-         *	Return he orderId just sent as a String
+         *	WTC Return he orderId just sent as a String
          */
         return new String(message.orderId);
     }

@@ -81,14 +81,13 @@ class CtsBridge extends Thread {
 	
 	
 	public CtsBridge(TerminalClient client, Events events, Instruments instruments)	{
-		// store information needed to call EnterCommand.bridgeExecute()
+		// store information needed to call EnterCommand.bridgeExecute() to enter orders
 		this.client = client;
 		this.events = events;
 		this.instruments = instruments;
 	}
 
 	// set by TerminalClient call to this.setSide()
-	// TODO was public, leaving for now
 	static private EnterCommand buySide, sellSide; 	
 	static private Instruments instruments;
 	static private TerminalClient client;
@@ -96,18 +95,20 @@ class CtsBridge extends Thread {
 	static final Boolean DEBUG_JSON = false;
 
 	/*
-	 * Start the CtsSocketServer to receive tenders from the LME,
-	 * via client socket send transactions to LME
+	 * The CtsSocketServer receives tenders from the LME.
 	 * 
-	 * This implementation of CtsSocketServer is blocking TODO use runnable
+	 * The CtsSocketClient sends transactions to the LME
 	 * 
-	 * createTenderQ takes the CreateTender requests from the LME read on the Server
-	 * Socket and places them in this queue.
+	 * Both are implemented as Threads for accessing their respective BlockingQueues
 	 */
-	static CtsSocketServer ctsSocketServer;
+	static CtsSocketServer ctsSocketServer;	// constructed and started later
+	// Queue entries are from LME via socket writes
     public ArrayBlockingQueue<MarketCreateTenderPayload> createTenderQ = new ArrayBlockingQueue<>(100);
     MarketCreateTenderPayload createTender;
     String tempParityOrderId = null;
+    
+	// CtsSocketClient sends MarketCreateTransactionPayloads from its queue to the LME
+    static CtsSocketClient ctsSocketClient;	// constructed and started later
 	
 	
 	/*
@@ -144,7 +145,7 @@ class CtsBridge extends Thread {
  *		DEBUG Create and Inject 10 random tenders.
  */
 	@Override
-	public void run()	{
+	public void run()	{	// Thread for processing requests to and from LME
 		initTenders();
 		sendTenders();
 		
@@ -162,15 +163,16 @@ class CtsBridge extends Thread {
 		 *  Tender on NIO queue in Parity Client so need not be in separate thread    
 		 */
 
-		if (DEBUG_JSON) System.err.println("CtsBridge run before new SocketServer: currentThread name: '" + Thread.currentThread().getName() + "'");
-		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this);	// separate thread for MarketCreateTenderPayloads
+		if (DEBUG_JSON) System.err.println("CtsBridge run before new SocketServer: currentThread name: '" +
+						Thread.currentThread().getName() + "'");
+		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this);	// thread enters MarketCreateTenderPayloads
 		ctsSocketServer.start();
 		
+		// TODO construct and start ctsSocketClient in its own thread - for send of MarketCreateTransactionPayloads
+		
 		while (true) {
-			// take() (blocking) from the ArrayBlockingQueue
-			
-			// TODO nothing filling queue right now, but will be CtsSocketServer thread
-			
+			// take() (blocking) from the ArrayBlockingQueue of MarketCreateTenderPayloads
+			// CtsSocketServer thread fills createTenderQ
 		
 			System.err.println("CtsBridge:run: CreateTenderQ size " + createTenderQ.size());
 	
@@ -233,19 +235,24 @@ class CtsBridge extends Thread {
 	 * The OrderExecuted POE message does not have side; correlate by orderId
 	 */
 	static void orderExecuted(POE.OrderExecuted message, String s) {
-		// process orderExecuted
-		// Generate MarketCreateTransactionPayload and send to LME
-		// Side is implicit in the OrderId
+		// process orderExecuted POE message
+		/*
+		 * process orderExecuted POE message
+		 * 
+		 * Generate MarketCreateTransactionPayload and send to LME.
+		 * Notes:
+		 * 		Side is implicit and can be determined from the OrderId
+		 * 		use map to determine side of the corresponding EiTender from map
+		 */
 		
 		/*
 		 * TODO use map to determine side of the corresponding EiTender from map
 		 */
 		MarketCreateTransactionPayload marketCreateTransaction = new MarketCreateTransactionPayload
 				(s, message.quantity, message.price, message.matchNumber, SideType.BUY);
-		System.err.println(marketCreateTransaction.toString());
+		System.err.println("CtsBridge.orderExecuted: " + marketCreateTransaction.toString());
 		
-		// 	Send via socket marketCreateTransactionPayload to LME TODO
-		// 	Need JSON serialization
+		// 	TODO Send via socket marketCreateTransactionPayload to LME
 	}
 	
 	public Instrument getLocalInstrument() {

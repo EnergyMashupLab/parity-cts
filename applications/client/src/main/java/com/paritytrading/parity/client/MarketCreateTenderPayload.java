@@ -49,10 +49,10 @@ public class MarketCreateTenderPayload {
 		SideType tempSide = this.side;
 		String tempString;	
 
-	tempString = (tempSide == SideType.BUY)? "B" : "S";
-		
+		tempString = (tempSide == SideType.BUY)? "B" : "S";	
 		return (info + " side " + tempString + " quantity " +
-				quantity + " price " + price);
+				quantity + " price " + price +
+				" CtsTenderId " + ctsTenderId );
 	}
 	
     @Override
