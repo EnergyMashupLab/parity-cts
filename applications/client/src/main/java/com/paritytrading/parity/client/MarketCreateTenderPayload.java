@@ -8,10 +8,12 @@ import com.paritytrading.parity.client.CtsInterval;
 
 /*
  * Sent by the LME to the Market with information to be
- * mapped and inserted in the market engine
+ * mapped and inserted in a market engine order.
  * 
  * Information is from an EiCreateTenderPayload received from the LMA
- * and used as constructor parameters by the LME Actor.
+ * and used as constructor parameters by the LME.
+ * 
+ * MANUAL SYNCHRONIZATION BETWEEN SEPARATE PARITY and CTS Applications
  */
 
 public class MarketCreateTenderPayload {	
@@ -20,11 +22,16 @@ public class MarketCreateTenderPayload {
 	private long quantity;
 	private long price;
 	private long ctsTenderId;
-	// TODO in NIST-CTS-Agents - needs interval and expireTime
+	// TODO in NIST-CTS-Agents - ensure that this type has interval and expireTime
 	BridgeInterval bridgeInterval;
 	BridgeInstant expireTime;
 
-	MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, CtsInterval interval, Instant expireTime)	{
+	MarketCreateTenderPayload(SideType side,
+			long quantity,
+			long price,
+			long ctsTenderId,
+			CtsInterval interval,
+			Instant expireTime)	{
 		/*
 		 * Ensure that the number of decimal fraction digits
 		 * in price and quantity align with the global one which is planned to be 3
@@ -34,10 +41,7 @@ public class MarketCreateTenderPayload {
 		this.price = price;
 		this.ctsTenderId = ctsTenderId;
 		this.bridgeInterval = new BridgeInterval(interval);
-		this.expireTime = new BridgeInstant(expireTime);
-		
-		
-//		System.err.println(this.toString());
+		this.expireTime = new BridgeInstant(expireTime);	
 	}
 	
 	// Default constructor for JSON
@@ -130,5 +134,4 @@ public class MarketCreateTenderPayload {
 		this.expireTime = expireTime;
 	}
 
-	
 }

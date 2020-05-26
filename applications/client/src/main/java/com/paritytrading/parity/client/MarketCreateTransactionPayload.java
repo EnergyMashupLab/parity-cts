@@ -1,7 +1,13 @@
 package com.paritytrading.parity.client;
 
-// TODO copied from RestTestbedTypes manual synchronization
-
+/*
+ * Sent by the Market to the LME with information from a market trade
+ * 
+ * Information will define an EiCreateTransactionPayload via
+ * this MarketCreateTransactionPayload
+ * 
+ * MANUAL SYNCHRONIZATION BETWEEN SEPARATE PARITY and CTS Applications
+ */
 public class MarketCreateTransactionPayload {
 	private String info = "MarketCreateTransactionPayload";
 	private SideType side;
@@ -10,22 +16,24 @@ public class MarketCreateTransactionPayload {
 	long ctsTenderId = 0;	// set before sending -- Map maintained by CtsBridge	
 	String parityOrderId = null;
 	long matchNumber = 0;	// parity matchNumber for this match
-
-
+	
 	
 	MarketCreateTransactionPayload()	{	// json
 	}
 	
-	MarketCreateTransactionPayload(String parityOrderId, long quantity, long price, long matchNumber, SideType side)	{
+	MarketCreateTransactionPayload(String parityOrderId,
+			long ctsTenderId,
+			long quantity,
+			long price,
+			long matchNumber,
+			SideType side)	{
 		this.parityOrderId = parityOrderId;
+		this.ctsTenderId = ctsTenderId;
 		this.quantity = quantity;
 		this.price = price;
 		this.matchNumber = matchNumber;
 		this.side = side;
-		// Side is implicit in parityOrderId with a Map lookup
-		// TODO consider whether to do the reverse map and get side here
 	}
-	
 	
 	@Override
 	public String toString()	{
@@ -33,17 +41,28 @@ public class MarketCreateTransactionPayload {
 		String tempString;	
 
 		tempString = (tempSide == SideType.BUY)? "B" : "S";		
-		return (info + " side " + tempString + " quantity " +
-				quantity + " price " + price + " matchNumber " + 
-				matchNumber + " CtsTenderId " + ctsTenderId );
+		return (info + " parityOrderId " + parityOrderId +
+				" ctsTenderId " + ctsTenderId +
+				" side " + tempString +
+				" quantity " + quantity 
+				+ " price " + price +
+				" matchNumber " + matchNumber);
 	}
 
-	public String getParityOrderId() {
-		return parityOrderId;
+	public String getInfo() {
+		return info;
 	}
 
-	public void setParityOrderId(String parityOrderId) {
-		this.parityOrderId = parityOrderId;
+	public void setInfo(String info) {
+		this.info = info;
+	}
+
+	public SideType getSide() {
+		return side;
+	}
+
+	public void setSide(SideType side) {
+		this.side = side;
 	}
 
 	public long getQuantity() {
@@ -62,14 +81,6 @@ public class MarketCreateTransactionPayload {
 		this.price = price;
 	}
 
-	public long getMatchNumber() {
-		return matchNumber;
-	}
-
-	public void setMatchNumber(long matchNumber) {
-		this.matchNumber = matchNumber;
-	}
-
 	public long getCtsTenderId() {
 		return ctsTenderId;
 	}
@@ -78,21 +89,20 @@ public class MarketCreateTransactionPayload {
 		this.ctsTenderId = ctsTenderId;
 	}
 
-	public String getInfo() {
-		return info;
+	public String getParityOrderId() {
+		return parityOrderId;
 	}
 
-	public void setInfo(String info) {
-		this.info = info;
+	public void setParityOrderId(String parityOrderId) {
+		this.parityOrderId = parityOrderId;
 	}
 
-	public SideType getSide() {
-		return side;
+	public long getMatchNumber() {
+		return matchNumber;
 	}
 
-	public void setSide(SideType side) {
-		this.side = side;
+	public void setMatchNumber(long matchNumber) {
+		this.matchNumber = matchNumber;
 	}
-	
-	
+
 }

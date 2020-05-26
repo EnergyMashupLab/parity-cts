@@ -21,6 +21,11 @@ import com.fasterxml.jackson.datatype.jsr310.*;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
+import java.util.Set;
+
 //	import org.apache.logging.log4j.LogManager;
 //	import org.apache.logging.log4j.Logger;
 
@@ -38,33 +43,34 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /*
-* CtsBridge is used to send and receive (via Spring RestContoller interactions)
-* messages both ways between the LME and the enhanced Parity Terminal Client.
+* CtsBridge is used to transform and send and receive messages between the LME and the 
+* enhanced Parity Terminal Client, thus entering Parity orders and detecting Parity
+* order execution.
 * 
-* Functions including two way mapping between CTS tenderId and Parity orderId are here.
+* CtsBridge functions include
 * 
-* An EiCreateTender message will be received from the LME and turned into a 
-* Parity Order Entry with mapping of tender/order IDs
+*		Creating the appropriate parity and CTS messages
+*
+* 		mapping from Parity orderId to the MarketCreateTenderPayload that
+* 		created the order and led to the Trade
+* 
+* 		mapping from the Parity orderExecuted uses the map to build and
+* 		send MarketCreateTransaction with the correct partyIds and ctsTenderIds.
+* 
+* A MarketCreateTender message is received from the LME and turned into a 
+* Parity Order Entry with necessary mapping of tender/order IDs
 * 
 * All prices and quantities are of the minimum increment; the minimum increment
 * MUST be consistent across this enhanced Terminal Client. First implementation
 * will use minimum increment price of one-tenth of a cent, a factor of 1000, and
 * integers for quantity.
-*/
-
-/*
-* Design note: This class is planned to run multiple Spring
-* RestControllers for POST and PUT operations between CTS and Parity. 
+*
+* Design note: This class is implemented with multiple threads including those in CtsBridge,
+* CtsSocketClient, and CtsSocketServer.
 * 
-* Terminal client message will go to the terminal window executing the shaded
-* jar, so manual entry of orders and detection of trades and of the order books,
-* by allowing the Parity Client orders (buy and sell) and the separate ticker and
-* (trade) reporter to function as designed.
-* 
-* The orders and trades
-* 
-* Future information retrieved from Parity System Event Visitor
-* 		status of orders (which includes matches by which orders are fulfilled)
+* The CtsBridge and related codes hooks the Parity Client so the user can run parity-client.jar,
+* where the parity ticker, reporter, manual entry, and trades and orders all function as in
+* the unmodified Parity release.
 */
 
 
@@ -102,8 +108,8 @@ class CtsBridge extends Thread {
 	 * Both are implemented as Threads for accessing their respective BlockingQueues
 	 */
 	static CtsSocketServer ctsSocketServer;	// constructed and started later
-	// Queue entries are from LME via socket writes
-    public ArrayBlockingQueue<MarketCreateTenderPayload> createTenderQ = new ArrayBlockingQueue<>(100);
+	// Queue entries are from LME via socket writes. 
+    public ArrayBlockingQueue<MarketCreateTenderPayload> createTenderQ = new ArrayBlockingQueue<>(200);
     MarketCreateTenderPayload createTender;
     String tempParityOrderId = null;
     
@@ -112,13 +118,20 @@ class CtsBridge extends Thread {
 	
 	
 	/*
-	 * Events may be used for detecting order entered/cancelled, updates from trades.
+	 * Events can be used for detecting order entered/cancelled, updates from trades.
 	 * This implementation hooks the message entry into the client and calls out to
-	 * CtsBridge methods.
+	 * CtsBridge methods for possible processing. See Parity Order Entry Protocol definition
 	 */
 	Events events;	// local copy if used for evolution
+	
+	/*
+	 * HashMap to correlate Parity Order IDs (String) and MarketCreatetenderPayload which created the order
+	 */
+	public static HashMap<String, MarketCreateTenderPayload> idToCreateTenderMap = new HashMap<String, MarketCreateTenderPayload>();
 
-	// arrays for volatile parts of an order and debug in initTenders and sendTenders
+	/*
+	 * arrays for volatile parts of an order and debug in initTenders and sendTenders
+	 */
 	private Instrument localInstrument;
 	private static long[] quantity = new long[10];
 	private static long[] price = new long[10];
@@ -126,9 +139,7 @@ class CtsBridge extends Thread {
 					new MarketCreateTenderPayload[10];
 	private static String[] json = new String[10];
 	private static MarketCreateTenderPayload[] deserializedTenderPayload = 
-					new MarketCreateTenderPayload[10];
-	
-	
+					new MarketCreateTenderPayload[10];	
 	private static String[] orderIds = new String[10];
 	
 	// for randomized quantity and price
@@ -141,21 +152,17 @@ class CtsBridge extends Thread {
 	 * 	Parity OrderId is returned from Order Entry
 	 */
 
-/*
- *		DEBUG Create and Inject 10 random tenders.
- */
+
 	@Override
 	public void run()	{	// Thread for processing requests to and from LME
+		/*
+		 *		DEBUG Create and Inject 10 random tenders.
+		 */
 		initTenders();
 		sendTenders();
-		
-		// initial example - ends after one response
 
-		/*
-		 *  Read from createTenderQ, after paylod processing call
-		 *  bridgeExecute to 
-		 *  
-		 *  thread each to
+		/*  
+		 *  One thread each to
 		 *  	read from createTenderQ (received from LME)
 		 *  	write to createTransactionQ (to send to LME)
 		 *  
@@ -171,29 +178,33 @@ class CtsBridge extends Thread {
 		// TODO construct and start ctsSocketClient in its own thread - for send of MarketCreateTransactionPayloads
 		
 		while (true) {
-			// take() (blocking) from the ArrayBlockingQueue of MarketCreateTenderPayloads
-			// CtsSocketServer thread fills createTenderQ
-		
-			System.err.println("CtsBridge:run: CreateTenderQ size " + createTenderQ.size());
-	
+			//	CtsSocketServer thread fills createTenderQ	
+//			System.err.println("CtsBridge:run: CreateTenderQ size: " + createTenderQ.size() + "remaining capacity: " +
+//					createTenderQ.remainingCapacity());
 			
 			try {
-				createTender = createTenderQ.take();
+				createTender = createTenderQ.take();	// blocking
 			} catch (InterruptedException e1) {
 				System.err.println("Interrupted while waiting on createTenderQ");
 				e1.printStackTrace();
 			}
 			// process the removed MarketCreateTenderPayload
 			if (createTender == null)	{
-				System.err.println("CtsBridge:run: tender is null");
+				System.err.println("CtsBridge:run: removed MarketCreateTenderPayload is null");
 			}
 			
-			// replace with conditional expression for buySide/sellSie
 			if ( createTender.getSide() == SideType.BUY)	{
 				 try	{
 					tempParityOrderId = buySide.bridgeExecute
 					 	(getClient(), createTender.getQuantity(), 
 						4702127773838221344L , createTender.getPrice());
+					// DEBUG using AAPL packed long for now
+					
+					//	save Parity OrderID String and createTender in map for use in orderExecuted
+					idToCreateTenderMap.put(tempParityOrderId, createTender);
+					// DEBUG 
+					//	printIdMap();
+
 				 } catch (IOException e) {
 					 System.out.println("error: CtsBridge: Connection closed");
 				 }	
@@ -203,9 +214,17 @@ class CtsBridge extends Thread {
 					tempParityOrderId = sellSide.bridgeExecute
 					 	(getClient(), createTender.getQuantity(), 
 						4702127773838221344L , createTender.getPrice());
+					
+					//	save Parity OrderID String and createTender in map for use in orderExecuted
+					idToCreateTenderMap.put(tempParityOrderId, createTender);
+					// DEBUG 
+					//	printIdMap();
+
 				} catch (IOException e) {
 					 System.out.println("error: CtsBridge: Connection closed"); 
 				}
+			
+
 						
 			// iterate
 			
@@ -215,41 +234,52 @@ class CtsBridge extends Thread {
 	
 
 	/*
-	 * methods to process POE protocol events - note that the parameter types
-	 * vary across the protocol messsages.
+	 * Methods to process POE protocol events - the type of parameter message vary
 	 * 
 	 * orderId is String message.orderId for all of the POE message types
 	 * 
-	 * Order and outoing protocol message are sent by calls to EnterCommand
-	 * buySide and sellSide
+	 * Order and other outgoing protocol message are sent by calls to EnterCommand
+	 * buySide and sellSide bridgeExecute()
 	 */
 	static void orderAccepted(POE.OrderAccepted message)	{
-		// process the orderAccepted - FUTURE
+		// process the orderAccepted - TODO
 	}
 	
 	static void orderRejected(POE.OrderRejected message)	{
-		//process the orderRejected - FUTURE
+		//process the orderRejected - TODO
 	}
 	
 	/*
 	 * The OrderExecuted POE message does not have side; correlate by orderId
 	 */
-	static void orderExecuted(POE.OrderExecuted message, String s) {
-		// process orderExecuted POE message
-		/*
-		 * process orderExecuted POE message
-		 * 
-		 * Generate MarketCreateTransactionPayload and send to LME.
-		 * Notes:
-		 * 		Side is implicit and can be determined from the OrderId
-		 * 		use map to determine side of the corresponding EiTender from map
-		 */
+	/*
+	 * process orderExecuted POE message
+	 * 
+	 * Generate MarketCreateTransactionPayload and send to LME.
+	 * Notes:
+	 * 		Side is implicit and can be determined from the OrderId
+	 * 		use map to determine side of the corresponding EiTender from map
+	 * 
+	 * 	NOTE: The OrderExecuted POE message does not have side; correlate by orderId
+	 * 	TODO use map to determine side of the corresponding EiTender from map
+	 */
+	static void orderExecuted(POE.OrderExecuted message, String parityOrderId) {
+		MarketCreateTenderPayload originalCreateTender;
+		originalCreateTender = idToCreateTenderMap.get(parityOrderId);
+		if (originalCreateTender == null) {
+			System.err.println("CtsBridge.orderExecuted: retrieved CreateTender is null");
+			printIdMap();	
+			}
 		
-		/*
-		 * TODO use map to determine side of the corresponding EiTender from map
-		 */
-		MarketCreateTransactionPayload marketCreateTransaction = new MarketCreateTransactionPayload
-				(s, message.quantity, message.price, message.matchNumber, SideType.BUY);
+		MarketCreateTransactionPayload marketCreateTransaction = 
+				new MarketCreateTransactionPayload(
+						parityOrderId, 
+						originalCreateTender.getCtsTenderId(),
+						message.quantity,	// likely differs from originalCreateTender
+						message.price, 		// likely differs from originalCreateTender
+						message.matchNumber, 
+						originalCreateTender.getSide());
+		
 		System.err.println("CtsBridge.orderExecuted: " + marketCreateTransaction.toString());
 		
 		// 	TODO Send via socket marketCreateTransactionPayload to LME
@@ -393,7 +423,12 @@ class CtsBridge extends Thread {
 				}
 			
 			// MarketCreateTenderPayload(SideType side, long quantity, long price, long ctsTenderId, CtsInterval interval, Instant expireTime)
-			createTenderPayload[i] = new MarketCreateTenderPayload(tempSide, quantity[i], price[i], 91, ctsInterval, dtStart);
+			createTenderPayload[i] = new MarketCreateTenderPayload(tempSide,
+					quantity[i],
+					price[i],
+					90+i,
+					ctsInterval,
+					dtStart.plusSeconds(60*60*11));
 			try	{
 				if (DEBUG_JSON) System.err.println("try block line 252 before serialization/deserialization. i = " + i);
 				json[i] = mapper.writeValueAsString(createTenderPayload[i]);
@@ -409,7 +444,7 @@ class CtsBridge extends Thread {
 			// and print the json
 			if (DEBUG_JSON) System.err.println("***" + json[i] + "***");
 			}
-		
+		// expireTime = dtStart.plusSeconds(60*60*11);
 		
 
 			// DEBUG print the headers
@@ -444,6 +479,11 @@ class CtsBridge extends Thread {
 					 orderIds[i] = sellSide.bridgeExecute
 							 (getClient(), quantity[i],
 							 longInstrument,price[i]);
+					 
+					 //	add to HashMap
+					 idToCreateTenderMap.put(orderIds[i], createTenderPayload[i]);
+					 //	DEBUG print
+					 //	printIdMap();
 				 } catch (IOException e) {
 					 System.out.println("error: CtsBridge: Connection closed");
 				 }	
@@ -453,6 +493,11 @@ class CtsBridge extends Thread {
 					orderIds[i] = buySide.bridgeExecute(
 								client, quantity[i],
 								longInstrument, price[i]);
+					
+					 //	add to HashMap
+					 idToCreateTenderMap.put(orderIds[i], createTenderPayload[i]);
+					 //	DEBUG print
+					 //	printIdMap();		
 				} catch (IOException e) {
 					 System.out.println("error: CtsBridge: Connection closed");
 				}
@@ -482,6 +527,17 @@ class CtsBridge extends Thread {
 				 System.out.println("error: CtsBridge: Connection closed");
 			}
 		}
+	}
+	
+	public static void printIdMap() {
+		// prints content of idToCreateTenderMap
+		Iterator it = idToCreateTenderMap.entrySet().iterator();
+		
+		System.err.println("CtsBridge.printIdMap ID MAP***");
+		while (it.hasNext()) {
+	        Map.Entry pair = (Map.Entry)it.next();
+	        System.out.println(pair.getKey() + " = " + pair.getValue().toString());
+	    }
 	}
 	
 }

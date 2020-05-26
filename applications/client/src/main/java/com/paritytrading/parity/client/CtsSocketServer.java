@@ -21,27 +21,23 @@ import java.util.AbstractCollection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-
-//	import org.apache.logging.log4j.LogManager;
-//  import org.apache.logging.log4j.Logger;
-
-/*
- * Communicates with CtsSocketClient in LmeRestController in CTS
- *
- *	This socket server in parity-cts receives and responds to MarketCreateTransaction
- * message and replies with a MarketCreatedTransaction message.
- */
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
+import java.util.Set;
 
 /*
- * 	Driver for testing does the following (MarketDriverCreateTender.java):
- * 		Socket Client opens socket a localhost:39402 which is the parity-client engine,
- * 		as part of CtsBridge CtsSocketServer.
+ * Overview:
+ * 		This CtsBridge Socket Server accepts connections on MARKET_PORT.
  * 
- * 		Client drives CtsBridge to insert tenders in the market by reading json serialized
- * 		MarketCreateTenderPayload from a file, writing on the socket.
+ * 		The LME Socket Client opens the LME IP address on MARKET_PORT.
  * 
- * 		CtsBridge.CtsSocketServer reads the payloads and inserts them one at a time into the
- * 		POE order entry service
+ * 		Client writes JSON-serialized MarketCreateTenderPayloads which are read by this
+ * 		CtsSockerServer, deserialized, and put on bridge.createTenderQ for further processing
+ * 		in CtsBridge.
+ * 
+ * 		CtsBridge loops, taking the first element of createTenderQ, inserts the information
+ * 		into the POE order entry service. That call to bridgeExecute returns the parity OrderId.	
  */
 
 public class CtsSocketServer extends Thread	{
@@ -51,20 +47,19 @@ public class CtsSocketServer extends Thread	{
 //	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
     private BufferedReader in;
     
-    public static final int LME_PORT = 39401;		// for Socket Server in LME takes CreateTransaction
-    public static final int MARKET_PORT = 39402;	// for Socket Server in Market takes CreateTender 
+    public static final int LME_PORT = 39401;		// for Socket Server in LME for CreateTransaction
+    public static final int MARKET_PORT = 39402;	// for Socket Server in Market for CreateTender 
     public final int port = MARKET_PORT;
     String jsonReceived = null;
     MarketCreateTenderPayload payload;
     
     final ObjectMapper mapper = new ObjectMapper();
-    CtsBridge bridge;
-    static CtsSocketServer sockServer;
-    ArrayBlockingQueue<MarketCreateTenderPayload> socketServerCreateTenderQ; // class local name for CtsBridge Q
+    CtsBridge bridge;	// to access bridge.createTenderQ
 
     @Override
     public void run() {
-     	System.err.println("CtsSocketServer.run Entry port: " + port + " '" + Thread.currentThread().getName() + "'");
+    	//	port is set in constructor
+     	//	System.err.println("CtsSocketServer.run() port: " + port + " '" + Thread.currentThread().getName() + "'");
    	
         try {
             serverSocket = new ServerSocket(port);
@@ -78,26 +73,17 @@ public class CtsSocketServer extends Thread	{
             	// blocking read on BufferedReader - sent by LME with ClientCreateTenderPayload JSON 
             	jsonReceived = in.readLine();       
                 
-                System.err.println("CtsSocketServer: start: jsonReceived is '" + jsonReceived 
-                			+ "' Thread " + Thread.currentThread().getName());
+//                System.err.println("CtsSocketServer: start: jsonReceived is '" + jsonReceived 
+//                			+ "' Thread " + Thread.currentThread().getName());
                 
                 if (jsonReceived == null)	break;
-                
-                
-                
                 payload = mapper.readValue(jsonReceived, MarketCreateTenderPayload.class);
-                
-                
-                System.err.println("CtsSocketServer.run payload received object: " + payload.toString());
-                
+                                
+//                System.err.println("CtsSocketServer.run payload received object: " + payload.toString());
                 
                 // add to the CtsBridge queue for processing
                 bridge.createTenderQ.put(payload);
-    		}
-             
-        
-        
-        
+    		}            
         } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());
         	System.err.println("CtsSocketServer: IOException in readLine?");
@@ -134,18 +120,12 @@ public class CtsSocketServer extends Thread	{
     
     public CtsSocketServer(int port, CtsBridge bridge)	{
     	System.err.println("CtsSocketServer: constructor Port: " + port);
-    	this.socketServerCreateTenderQ = bridge.createTenderQ;
     	this.bridge = bridge;
     	if (bridge == null)	{
     		System.err.println("CtsSocketServer: constructor:this.bridge is null");
     	}
     	
-    	//	This created a second server DEBUG
-    	//	CtsSocketServer sockServer = new CtsSocketServer();
-    	
     	// TODO Lambda Expression for separate thread - alt implements runnable, place in thread//
-    	
-        //	sockServer.start();
     }
     
 }
