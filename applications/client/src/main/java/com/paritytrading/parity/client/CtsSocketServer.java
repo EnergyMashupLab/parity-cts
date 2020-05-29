@@ -21,10 +21,10 @@ import java.util.AbstractCollection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Set;
+//import java.util.HashMap;
+//import java.util.Map;
+//import java.util.Iterator;
+//import java.util.Set;
 
 /*
  * Overview:
@@ -32,12 +32,13 @@ import java.util.Set;
  * 
  * 		The LME Socket Client opens the LME IP address on MARKET_PORT.
  * 
- * 		Client writes JSON-serialized MarketCreateTenderPayloads which are read by this
- * 		CtsSockerServer, deserialized, and put on bridge.createTenderQ for further processing
- * 		in CtsBridge.
+ * 		Client writes JSON-serialized MarketCreateTenderPayloads which
+ * 		are read by this CtsSockerServer, deserialized, and put on
+ * 		bridge.createTenderQ for further processing in CtsBridge.
  * 
- * 		CtsBridge loops, taking the first element of createTenderQ, inserts the information
- * 		into the POE order entry service. That call to bridgeExecute returns the parity OrderId.	
+ * 		CtsBridge loops, taking the first element of createTenderQ,
+ * 		inserts the information into the POE order entry service.
+ * 		That call to bridgeExecute returns the parity OrderId.	
  */
 
 public class CtsSocketServer extends Thread	{
@@ -47,8 +48,10 @@ public class CtsSocketServer extends Thread	{
 //	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
     private BufferedReader in;
     
-    public static final int LME_PORT = 39401;		// for Socket Server in LME for CreateTransaction
-    public static final int MARKET_PORT = 39402;	// for Socket Server in Market for CreateTender 
+    // Socket Server in LME for CreateTransaction
+    public static final int LME_PORT = 39401;
+    // Socket Server in Market for CreateTender 
+    public static final int MARKET_PORT = 39402;
     public final int port = MARKET_PORT;
     String jsonReceived = null;
     MarketCreateTenderPayload payload;
@@ -59,29 +62,35 @@ public class CtsSocketServer extends Thread	{
     @Override
     public void run() {
     	//	port is set in constructor
-     	//	System.err.println("CtsSocketServer.run() port: " + port + " '" + Thread.currentThread().getName() + "'");
+     		System.err.println("CtsSocketServer.run() port: " + port +
+    		" '" + Thread.currentThread().getName() + "'");
    	
         try {
             serverSocket = new ServerSocket(port);
             clientSocket = serverSocket.accept();
-            if (clientSocket == null)	System.err.println("clientSocket null - after accept");
+            if (clientSocket == null)
+            	System.err.println("CtsSocketServer: clientSocket null after accept");
             out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            in = new BufferedReader(
+            			new InputStreamReader(clientSocket.getInputStream()));
             if (in == null || out == null)	System.err.println("in or out null");
 
             while (true)	{
-            	// blocking read on BufferedReader - sent by LME with ClientCreateTenderPayload JSON 
+            	//	blocking read on BufferedReader. Lines are sent by LME
+            	//	and are a JSON serialized ClientCreateTenderPayload 
             	jsonReceived = in.readLine();       
                 
-//                System.err.println("CtsSocketServer: start: jsonReceived is '" + jsonReceived 
-//                			+ "' Thread " + Thread.currentThread().getName());
+              System.err.println("CtsSocketServer: start: jsonReceived is '" + 
+            		jsonReceived  + "' Thread " + Thread.currentThread().getName());
                 
                 if (jsonReceived == null)	break;
-                payload = mapper.readValue(jsonReceived, MarketCreateTenderPayload.class);
+                payload = mapper.readValue(
+                		jsonReceived, MarketCreateTenderPayload.class);
                                 
-//                System.err.println("CtsSocketServer.run payload received object: " + payload.toString());
+              System.err.println("CtsSocketServer.run payload received object: " +
+              		payload.toString());
                 
-                // add to the CtsBridge queue for processing
+                // Put in the CtsBridge queue for processing
                 bridge.createTenderQ.put(payload);
     		}            
         } catch (IOException  e) {       	
@@ -107,25 +116,35 @@ public class CtsSocketServer extends Thread	{
     }
     
     public CtsSocketServer()	{
+    	System.err.println(
+    		"CtsSocketServer: constructor no args " + Thread.currentThread().getName());
     }
     
     public CtsSocketServer(int port)	{
-    	//System.err.println("CtsSocketServer: constructor Port: " + port);
+    	System.err.println(
+    		"CtsSocketServer: constructor Port: " + port + " " +
+    		Thread.currentThread().getName() );
     	
     	CtsSocketServer server = new CtsSocketServer();	
-    	// TODO Lambda Expression for separate thread - alt implements runnable, place in thread//
-    	
-        // now a thread server.start();
+    	// TODO Lambda Expression for separate thread - current is in thread
     }
     
     public CtsSocketServer(int port, CtsBridge bridge)	{
-    	System.err.println("CtsSocketServer: constructor Port: " + port);
+    	System.err.println("CtsSocketServer: constructor bridge and Port: " 
+    			+ port + " " + Thread.currentThread().getName() );
     	this.bridge = bridge;
     	if (bridge == null)	{
     		System.err.println("CtsSocketServer: constructor:this.bridge is null");
     	}
-    	
-    	// TODO Lambda Expression for separate thread - alt implements runnable, place in thread//
     }
     
+    public CtsSocketServer(CtsBridge bridge)	{
+    	System.err.println("CtsSocketServer: constructor bridge: "  +
+        		Thread.currentThread().getName() );
+    	this.bridge = bridge;
+    	if (bridge == null)	{
+    		System.err.println("CtsSocketServer: constructor:this.bridge is null");
+    	}
+    	// will start() later with appropriate port - port is static final
+    }
 }
