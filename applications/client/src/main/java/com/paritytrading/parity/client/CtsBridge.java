@@ -165,8 +165,8 @@ class CtsBridge extends Thread {
 		/*
 		 *		DEBUG Create and Inject 10 random tenders.
 		 */
-		initTenders();
-		sendTenders();
+//		initTenders();
+//		sendTenders();
 
 		/*  
 		 *  One thread each to
