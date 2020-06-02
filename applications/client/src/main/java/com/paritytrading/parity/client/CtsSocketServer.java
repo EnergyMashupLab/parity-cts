@@ -52,7 +52,7 @@ public class CtsSocketServer extends Thread	{
     public static final int LME_PORT = 39401;
     // Socket Server in Market for CreateTender 
     public static final int MARKET_PORT = 39402;
-    public final int port = MARKET_PORT;
+    public static int port = MARKET_PORT;
     String jsonReceived = null;
     MarketCreateTenderPayload payload;
     
@@ -72,26 +72,29 @@ public class CtsSocketServer extends Thread	{
             	System.err.println("CtsSocketServer: clientSocket null after accept");
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(
-            			new InputStreamReader(clientSocket.getInputStream()));
+            		new InputStreamReader(clientSocket.getInputStream()));
             if (in == null || out == null)	System.err.println("in or out null");
 
             while (true)	{
-            	//	blocking read on BufferedReader. Lines are sent by LME
-            	//	and are a JSON serialized ClientCreateTenderPayload 
-            	jsonReceived = in.readLine();       
-                
-              System.err.println("CtsSocketServer: start: jsonReceived is '" + 
+            	//	blocking read on BufferedReader of a JSON serialized ClientCreateTenderPayload 
+              	// DEBUG
+            	System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
+            	jsonReceived = in.readLine();     
+            	System.err.println("CtsSocketServer.run: after readLine jsonReceived is '" + 
             		jsonReceived  + "' Thread " + Thread.currentThread().getName());
                 
                 if (jsonReceived == null)	break;
                 payload = mapper.readValue(
                 		jsonReceived, MarketCreateTenderPayload.class);
                                 
-              System.err.println("CtsSocketServer.run payload received object: " +
+            	System.err.println("CtsSocketServer.run payload received: " +
               		payload.toString());
                 
-                // Put in the CtsBridge queue for processing
+                // Put in bridge.createTenderQ for entry to Parity
+              	// DEBUG BLOCKING
+              	System.err.println("CtsSocketServer.run before createTenderQ.put " + Thread.currentThread().getName());
                 bridge.createTenderQ.put(payload);
+              	System.err.println("CtsSocketServer.run after createTenderQ.put " + Thread.currentThread().getName());
     		}            
         } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());
@@ -117,13 +120,14 @@ public class CtsSocketServer extends Thread	{
     
     public CtsSocketServer()	{
     	System.err.println(
-    		"CtsSocketServer: constructor no args " + Thread.currentThread().getName());
+    		"CtsSocketServer: constructor no args port " + port + " " +Thread.currentThread().getName());
     }
     
     public CtsSocketServer(int port)	{
     	System.err.println(
-    		"CtsSocketServer: constructor Port: " + port + " " +
+    		"CtsSocketServer: constructor 1 arg port: " + port + " " +
     		Thread.currentThread().getName() );
+    	this.port = port;
     	
     	CtsSocketServer server = new CtsSocketServer();	
     	// TODO Lambda Expression for separate thread - current is in thread
@@ -133,6 +137,7 @@ public class CtsSocketServer extends Thread	{
     	System.err.println("CtsSocketServer: constructor bridge and Port: " 
     			+ port + " " + Thread.currentThread().getName() );
     	this.bridge = bridge;
+    	this.port = port;
     	if (bridge == null)	{
     		System.err.println("CtsSocketServer: constructor:this.bridge is null");
     	}

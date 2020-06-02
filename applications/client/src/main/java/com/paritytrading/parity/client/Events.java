@@ -84,9 +84,9 @@ class Events implements POEClientListener {
 	public void orderExecuted(POE.OrderExecuted message) {
 		String parityOrderId = new String(message.orderId);
 
-		// HOOK - Insert call to CtsBridge as needed
-//		System.out.println("Events: start of orderExecuted: Parity orderId " + parityOrderId);
+		// HOOK - Insert call to CtsBridge.orderExecuted
 		
+		System.err.println("Events.orderExecuted " + Thread.currentThread().getName());
 		// Callout to CtsBridge for processing
 		CtsBridge.orderExecuted(message, parityOrderId);
 		

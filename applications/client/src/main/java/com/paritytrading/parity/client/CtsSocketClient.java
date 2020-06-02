@@ -79,22 +79,14 @@ public class CtsSocketClient	extends Thread {
 	public static final int MARKET_PORT = 39402;
 	public static final int LME_PORT = 39401;		// Socket Client in CtsBridge sends MarketCreateTransaction
 	
-	private static int port = MARKET_PORT;	// CreateTransaction to LME from Market
+	private static int port = LME_PORT;	// CreateTransaction from Market to LME
 	private static String ip = "127.0.0.1";
 	
-	// queueToMarket is for processed MarketCreateTenderPayload objects
-	private static BlockingQueue<String> queueToMarket = new ArrayBlockingQueue(20);
+//	private static String driverLine;	// input line to drive to Market - json encoding
+//	private static String s;
+//	private static int ITERATIONS = 27;
 	
-	// queueFromLme in LME for EiCreateTender payloads
-	// in LmeRestController.queueFromLme
-	//	private static BlockingQueue<EiCreateTenderPayload> queueFromLme = new ArrayBlockingQueue(20);
-	
-	private static String driverLine;	// input line to drive to Market - json encoding
-	private static String s;
-	private static int ITERATIONS = 27;
-	
-	CtsBridge bridge;	// to access bridge.createTenderQ
-
+	CtsBridge bridge;	// to access bridge.createTransactionQ
 	
 	public CtsSocketClient()	{
     	System.err.println("CtsSocketClient: constructor no args" +
@@ -105,16 +97,17 @@ public class CtsSocketClient	extends Thread {
 	public void run() {
 		MarketCreateTransactionPayload createTransaction;
 //		EiTender tender;
-		MarketCreateTransactionPayload toJson;
+//		MarketCreateTransactionPayload toJson;
 		String jsonString = null;	// for JSON string
  		System.err.println("CtsSocketClient.run() port: " + port +
  				" " + Thread.currentThread().getName());
 		
-//		logger.info("Thread name" + Thread.currentThread().getName() + " port " + port + " ip " + ip);
-		
 		  try {
 				clientSocket = new Socket(ip, port);
 				out = new PrintWriter(clientSocket.getOutputStream(), true);
+				
+				System.err.println("CtsSocketClient.run out is " + out.toString());
+				
 				in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		  } catch (IOException e) {
 //				logger.debug("SocketClient start IOException: " + e.getMessage());
@@ -123,36 +116,30 @@ public class CtsSocketClient	extends Thread {
 		  while(true) {
 //			  logger.info("SocketClient while loop head");
 			  try {
-				// take the first MarketCreateTransactionPayload from the queue, serialize, and send
-				createTransaction = bridge.createTransactionQ.take();
-			
-//				logger.info("SocketClient take head of queueFromLme: size " + LmeRestController.queueFromLme.size() +
-//						create.getTender().toString());
+				  	// take the first MarketCreateTransactionPayload from the queue, serialize, and send
+	              	System.err.println("CtsSocketClient.run before bridge.createTransactionQ.take " + Thread.currentThread().getName());
+	              	createTransaction = bridge.createTransactionQ.take();
+	              	System.err.println("CtsSocketClient.run after bridge.createTransactionQ.take " + Thread.currentThread().getName());
 				
-//				tender = create.getTender();
-//				toJson = new MarketCreateTenderPayload(
-//							tender.getSide(),
-//							tender.getQuantity(),
-//							tender.getPrice(),
-//							tender.getTenderId().value(),
-//							tender.getInterval(),
-//							tender.getExpireTime());
-				
-				// TODO save EiCreateTenderPayload in Map <long, EiCreateTenderPayload> for 
-				// retrieval when the MarketCreateTransaction is received by CtsSocketServer
-				
-				jsonString = mapper.writeValueAsString(createTransaction);
-				out.println(jsonString);			
-//				logger.info("SocketClient after println of json " + jsonString);			
+	              	jsonString = mapper.writeValueAsString(createTransaction);
+	              	if (jsonString == null)	{
+	              		System.err.println("CtsSocketClient.run jsonString null");
+	              	}	else	{
+	              		System.err.println("CtsSocketClient.run jsonString to Lme " + jsonString);
+	              	}
+	              	
+	              	out.println(jsonString);	
+	              	
+	              	System.err.println("CtsSocketClient.run Json string written to Lme " + jsonString);
+//	              	logger.info("SocketClient after println of json " + jsonString);			
 			} catch (InterruptedException e) {
-				System.err.println("queueFromLme.take interrupted");
-				e.printStackTrace();
+					System.err.println("createTransactionQ.take interrupted");
+					e.printStackTrace();
 			} catch (JsonProcessingException e) {
-				System.err.println("JsonProcessingException: Input MarketCreateTenderPayload " + e);
-				e.printStackTrace();
+					System.err.println("JsonProcessingException: Input MarketCreateTenderPayload " + e);
+					e.printStackTrace();
 			}
-		  }
-		  
+		  }  
 	}
 
 	public String sendMessage(String msg) {	// not used TODO delete
@@ -177,12 +164,12 @@ public class CtsSocketClient	extends Thread {
 	  }
 	}
 	
-
     
     public CtsSocketClient(int port, CtsBridge bridge)	{
-    	System.err.println("CtsSocketClient: constructor bridge and Port: " +
+    	System.err.println("CtsSocketClient: constructor 2 parameters bridge and Port: " +
     			port + " " + Thread.currentThread().getName());
     	this.bridge = bridge;
+    	this.port = port;
     	if (bridge == null)	{
     		System.err.println("CtsSocketClient: constructor:this.bridge is null");
     	}
