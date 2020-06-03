@@ -78,10 +78,10 @@ public class CtsSocketServer extends Thread	{
             while (true)	{
             	//	blocking read on BufferedReader of a JSON serialized ClientCreateTenderPayload 
               	// DEBUG
-            	System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
+//            	System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
             	jsonReceived = in.readLine();     
-            	System.err.println("CtsSocketServer.run: after readLine jsonReceived is '" + 
-            		jsonReceived  + "' Thread " + Thread.currentThread().getName());
+//            	System.err.println("CtsSocketServer.run: after in.eadLine jsonReceived is '" + 
+//            		jsonReceived  + "' Thread " + Thread.currentThread().getName());
                 
                 if (jsonReceived == null)	break;
                 payload = mapper.readValue(
@@ -90,11 +90,12 @@ public class CtsSocketServer extends Thread	{
             	System.err.println("CtsSocketServer.run payload received: " +
               		payload.toString());
                 
-                // Put in bridge.createTenderQ for entry to Parity
+                // Put on bridge.createTenderQ for entry to CtsBridge
               	// DEBUG BLOCKING
-              	System.err.println("CtsSocketServer.run before createTenderQ.put " + Thread.currentThread().getName());
+//              	System.err.println("CtsSocketServer.run before createTenderQ.put " + Thread.currentThread().getName());
                 bridge.createTenderQ.put(payload);
-              	System.err.println("CtsSocketServer.run after createTenderQ.put " + Thread.currentThread().getName());
+              	System.err.println("CtsSocketServer.run after createTenderQ.put size " + 
+              			bridge.createTenderQ.size() + " " +Thread.currentThread().getName());
     		}            
         } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());
