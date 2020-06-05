@@ -204,7 +204,7 @@ class CtsBridge extends Thread {
 				System.err.println("CtsBridge:run: removed MarketCreateTenderPayload is null");
 				continue;
 			}	else	{
-				System.err.println("CtsBridge.run: side " + createTender.toString());
+//				System.err.println("CtsBridge.run: " + createTender.toString());
 			}
 			
 			if ( createTender.getSide() == SideType.BUY)	{	// BUY
@@ -294,8 +294,8 @@ class CtsBridge extends Thread {
 			System.err.println("CtsBridge.orderExecuted: parityOrderId "  + 
 					parityOrderId + " originalCreateTender is null.");
 			}	else	{ 	// has a valid map entry
-				System.err.println("CtsBridge.orderExecuted " +  parityOrderId + " " +
-						" originalCreateTender " + originalCreateTender.toString());
+				System.err.println("CtsBridge.orderExecuted " +  parityOrderId +
+					" original CreateTender CtsTenderId " + originalCreateTender.getCtsTenderId());
 				
 				marketCreateTransaction = new MarketCreateTransactionPayload(
 						parityOrderId, 
@@ -309,7 +309,7 @@ class CtsBridge extends Thread {
 				//	to send to LME
 				try {
 					createTransactionQ.put(marketCreateTransaction);
-					System.err.println("CtsBridge.orderExecuted: createTransactionQ.put size now " + createTransactionQ.size());
+//					System.err.println("CtsBridge.orderExecuted: createTransactionQ.put size now " + createTransactionQ.size());
 				} catch (InterruptedException e) {
 					System.err.println("CtsBridge.orderExecuted: createTransactionQ.put interrupted");
 					e.printStackTrace();

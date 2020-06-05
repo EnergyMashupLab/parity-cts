@@ -61,7 +61,7 @@ public class CtsSocketServer extends Thread	{
 
     @Override
     public void run() {
-    	//	port is set in constructor
+    	//	port is set in constructor or by initializer
      		System.err.println("CtsSocketServer.run() port: " + port +
     		" '" + Thread.currentThread().getName() + "'");
    	
@@ -77,7 +77,7 @@ public class CtsSocketServer extends Thread	{
 
             while (true)	{
             	//	blocking read on BufferedReader of a JSON serialized ClientCreateTenderPayload 
-              	// DEBUG
+            	
 //            	System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
             	jsonReceived = in.readLine();     
 //            	System.err.println("CtsSocketServer.run: after in.eadLine jsonReceived is '" + 
@@ -87,15 +87,17 @@ public class CtsSocketServer extends Thread	{
                 payload = mapper.readValue(
                 		jsonReceived, MarketCreateTenderPayload.class);
                                 
-            	System.err.println("CtsSocketServer.run payload received: " +
+            	System.err.println("CtsSocketServer.run received: " +
               		payload.toString());
                 
                 // Put on bridge.createTenderQ for entry to CtsBridge
               	// DEBUG BLOCKING
 //              	System.err.println("CtsSocketServer.run before createTenderQ.put " + Thread.currentThread().getName());
-                bridge.createTenderQ.put(payload);
-              	System.err.println("CtsSocketServer.run after createTenderQ.put size " + 
-              			bridge.createTenderQ.size() + " " +Thread.currentThread().getName());
+               
+            	bridge.createTenderQ.put(payload);
+            	
+//              	System.err.println("CtsSocketServer.run after createTenderQ.put size " + 
+//              			bridge.createTenderQ.size() + " " +Thread.currentThread().getName());
     		}            
         } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());
@@ -120,14 +122,14 @@ public class CtsSocketServer extends Thread	{
     }
     
     public CtsSocketServer()	{
-    	System.err.println(
-    		"CtsSocketServer: constructor no args port " + port + " " +Thread.currentThread().getName());
+//    	System.err.println(
+//    		"CtsSocketServer: constructor no args port " + port + " " +Thread.currentThread().getName());
     }
     
     public CtsSocketServer(int port)	{
-    	System.err.println(
-    		"CtsSocketServer: constructor 1 arg port: " + port + " " +
-    		Thread.currentThread().getName() );
+//    	System.err.println(
+//    		"CtsSocketServer: constructor 1 arg port: " + port + " " +
+//    		Thread.currentThread().getName() );
     	this.port = port;
     	
     	CtsSocketServer server = new CtsSocketServer();	
@@ -135,8 +137,8 @@ public class CtsSocketServer extends Thread	{
     }
     
     public CtsSocketServer(int port, CtsBridge bridge)	{
-    	System.err.println("CtsSocketServer: constructor bridge and Port: " 
-    			+ port + " " + Thread.currentThread().getName() );
+//    	System.err.println("CtsSocketServer: constructor bridge and Port: " 
+//    			+ port + " " + Thread.currentThread().getName() );
     	this.bridge = bridge;
     	this.port = port;
     	if (bridge == null)	{
@@ -145,8 +147,8 @@ public class CtsSocketServer extends Thread	{
     }
     
     public CtsSocketServer(CtsBridge bridge)	{
-    	System.err.println("CtsSocketServer: constructor bridge: "  +
-        		Thread.currentThread().getName() );
+//    	System.err.println("CtsSocketServer: constructor bridge: "  +
+//        		Thread.currentThread().getName() );
     	this.bridge = bridge;
     	if (bridge == null)	{
     		System.err.println("CtsSocketServer: constructor:this.bridge is null");
