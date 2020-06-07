@@ -29,7 +29,9 @@ import java.time.Duration;
 import com.fasterxml.jackson.datatype.jsr310.*;
 
 public class BridgeInterval {
-	// only for JSON serialization over sockets - see note on Spring Boog
+	// only for JSON serialization over sockets between CTS and Parity
+	//	- see note on Spring Boot
+	
 	private long durationInMinutes = 0;	//integral minutes
 	private BridgeInstant dtStart;
 	
