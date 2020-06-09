@@ -156,8 +156,8 @@ public class CtsSocketClient	extends Thread {
           		out.println(jsonString);
           		
           		
-              	System.err.println("CtsSocketClient.run Json string written to Lme " + jsonString);
-//		              	logger.info("SocketClient after println of json " + jsonString);		
+//              	System.err.println("CtsSocketClient.run Json string written to Lme " + jsonString);
+//		              	logger.debug("after println of json " + jsonString);		
               	
 			} catch (InterruptedException e1) {
 				System.err.println("createTransactionQ.take interrupted");
