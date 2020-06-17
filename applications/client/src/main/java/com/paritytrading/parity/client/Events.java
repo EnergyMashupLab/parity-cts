@@ -23,6 +23,7 @@ import java.util.List;
 import com.paritytrading.parity.client.*;
 
 /*
+ *	WTC
  *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
  *	and EiCanceledTender and error information
  *		orderAccepted
@@ -72,7 +73,7 @@ class Events implements POEClientListener {
 	/*
 	 * POE.OrderExecuted.java includes attributes we need:
 	 * 
-	 * 		orderId - maps to CTS OrderId in CtsBridge 
+	 * 		orderId - maps to CtsTenderId in CtsBridge 
 	 * 		quantity 
 	 * 		price 
 	 * Not used by CTS

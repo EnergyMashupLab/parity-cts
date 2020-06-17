@@ -100,8 +100,8 @@ class CtsBridge extends Thread {
 	static final Boolean DEBUG_JSON = false;
 
 	/*
-	 * CtsSocketServer receives tenders from the LME and puts on createTenderQ
-	 * CtsSocketClient takes transactions from createTransactionQ and sends to the LME
+	 * CtsSocketServer receives tenders from the LME and puts on createTenderQueue
+	 * CtsSocketClient takes transactions from createTransactionQueue and sends to the LME
 	 * 
 	 * Both are Threads for accessing their respective BlockingQueues and their sockets
 	 * 
@@ -109,13 +109,13 @@ class CtsBridge extends Thread {
 	 */
 	static CtsSocketServer ctsSocketServer;	// constructed and started later
 	// Queue entries are from LME via socket writes. 
-    public ArrayBlockingQueue<MarketCreateTenderPayload> createTenderQ = new ArrayBlockingQueue<>(200);
+    public ArrayBlockingQueue<MarketCreateTenderPayload> createTenderQueue = new ArrayBlockingQueue<>(200);
     MarketCreateTenderPayload createTender;
     String tempParityOrderId = null;
     
 	// CtsSocketClient sends MarketCreateTransactionPayloads from its queue to the LME
     static CtsSocketClient ctsSocketClient;	// constructed and started later
-    public static ArrayBlockingQueue<MarketCreateTransactionPayload> createTransactionQ = new ArrayBlockingQueue<>(200);
+    public static ArrayBlockingQueue<MarketCreateTransactionPayload> createTransactionQueue = new ArrayBlockingQueue<>(200);
     MarketCreateTransactionPayload createTransaction;
 	
 	/*
@@ -165,10 +165,10 @@ class CtsBridge extends Thread {
 //		sendTenders();
 
 		/*  
-		 *  This CtsBridge thread reads Tenders from createTenderQ (received from LME) and inject to market
+		 *  This CtsBridge thread reads Tenders from createTenderQueueueue (received from LME) and inject to market
 		 *  
 		 *  Another thread from parity-client calls CtsBridge.orderExecuted and inserts transactions
-		 *  in createTransactionQ (to be taken off and sent to LME by CtsSocketClient)
+		 *  in createTransactionQueue (to be taken off and sent to LME by CtsSocketClient)
 		 *  
 		 *  CtsBridge processing of CreateTenderPayload consists of a call to bridgeExecute to put
 		 *  Tender on NIO queue in Parity Client -- fast and nonblocking so no need for separate thread    
@@ -186,16 +186,16 @@ class CtsBridge extends Thread {
 		System.err.println("Started SocketServer and SocketClient");
 		
 		while (true) {
-			//	CtsSocketServer fills createTenderQ	from LME
+			//	CtsSocketServer fills createTenderQueue	from LME
 			//	Take first and send as order entry to Parity
 			
 			try {
 				// DEBUG before and after blocking operation
-//				System.err.println("CtsBridge.run before createTenderQ.take " + Thread.currentThread().getName());
-				createTender = createTenderQ.take();	// blocking
-//				System.err.println("CtsBridge.run after createTenderQ.take " + Thread.currentThread().getName());
+//				System.err.println("CtsBridge.run before createTenderQueue.take " + Thread.currentThread().getName());
+				createTender = createTenderQueue.take();	// blocking
+//				System.err.println("CtsBridge.run after createTenderQueue.take " + Thread.currentThread().getName());
 			} catch (InterruptedException e1) {
-				System.err.println("Interrupted while waiting on createTenderQ");
+				System.err.println("Interrupted while waiting on createTenderQueue");
 				e1.printStackTrace();
 			}
 			
@@ -305,13 +305,13 @@ class CtsBridge extends Thread {
 						message.matchNumber, 
 						originalCreateTender.getSide());
 				
-				//	And put MarketCreateTransactionPayload on createTransactionQ for CtsSocketServer
+				//	And put MarketCreateTransactionPayload on createTransactionQueue for CtsSocketServer
 				//	to send to LME
 				try {
-					createTransactionQ.put(marketCreateTransaction);
-//					System.err.println("CtsBridge.orderExecuted: createTransactionQ.put size now " + createTransactionQ.size());
+					createTransactionQueue.put(marketCreateTransaction);
+//					System.err.println("CtsBridge.orderExecuted: createTransactionQueue.put size now " + createTransactionQueue.size());
 				} catch (InterruptedException e) {
-					System.err.println("CtsBridge.orderExecuted: createTransactionQ.put interrupted");
+					System.err.println("CtsBridge.orderExecuted: createTransactionQueue.put interrupted");
 					e.printStackTrace();
 				}
 			}
