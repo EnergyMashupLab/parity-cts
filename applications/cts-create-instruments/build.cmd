@@ -1,5 +1,5 @@
 @echo off
 
-javac InstrumentGenerator.java
+javac ConfigurationGenerator.java
 
-jar cfe instrumentGen.jar InstrumentGenerator InstrumentGenerator.class
+jar cfe config-gen.jar ConfigurationGenerator ConfigurationGenerator.class

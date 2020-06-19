@@ -24,13 +24,13 @@ import java.util.List;
  * <li>{@code -c} Outputs instruments in parity-client format</li>
  * </ul>
  */
-public class InstrumentGenerator {
+public class ConfigurationGenerator {
 
 	private static final int MINUTES_IN_DAY = 1440;
 
 	public static void main(String[] args) {
 		final String USAGE =
-				"Usage: instruments.jar [-f filepath] -s | -c START_DAY INTERVAL_MINS NUM_DAYS\n"
+				"Usage: instruments.jar [--help] [-f filepath] -s | -c START_DAY INTERVAL_MINS NUM_DAYS\n"
 						+ "Generate instruments in parity system/client configuration format\n"
 						+ "Example: java -jar -f sys.conf -s 20200704 60 1";
 		final String OPTIONS = "Options:\n"
@@ -40,9 +40,12 @@ public class InstrumentGenerator {
 				+ "-s      Outputs instruments in parity-system configuration format\n"
 				+ "-c      Outputs instruments in parity-client configuration format";
 
-		if (args[0].equals("--help")) {
-			System.out.println(USAGE.concat("\n"));
-			System.out.println(OPTIONS);
+		final int MIN_ARGS = 4;
+		if (args.length < MIN_ARGS) {
+			System.err.println(USAGE);
+			if (args.length == 1 && args[0].equals("--help")) {
+				System.err.printf("%n%s", OPTIONS);
+			}
 			System.exit(0);
 		}
 
@@ -75,7 +78,7 @@ public class InstrumentGenerator {
 					break;
 			}
 		}
-		if (argPos + 2 > args.length) {
+		if (argPos + 2 >= args.length) {
 			System.err.println(USAGE);
 			System.err.println("Missing arguments");
 			System.exit(1);
@@ -106,11 +109,10 @@ public class InstrumentGenerator {
 
 		long numDays = Long.parseLong(args[argPos]);
 		List<LocalDateTime> instrumentList = new ArrayList<>();
-		instrumentList.add(startDate);
 		populateInstruments(instrumentList, startDate, interval, numDays);
 
 		StringBuilder output = new StringBuilder();
-		formatInstruments(instrumentList, output, sysFlag);
+		formatOutput(instrumentList, output, sysFlag);
 
 		writeOutput(filepath, output.toString());
 	}
@@ -119,19 +121,18 @@ public class InstrumentGenerator {
 	 * Adds instruments to the {@code instrumentList} incrementing by minutes in interval and number
 	 * of days.
 	 * 
-	 * @param instrumentList
-	 * @param startDate
-	 * @param interval
-	 * @param numDays
+	 * @param instrumentList list to add instruments to
+	 * @param startDate      start date of intervals
+	 * @param interval       number of minutes between intervals
+	 * @param numDays        days that intervals should span
 	 */
 	private static void populateInstruments(List<LocalDateTime> instrumentList,
 			LocalDateTime startDate, int interval, long numDays) {
 		for (int i = 0; i < numDays; i++) {
-			for (int j = 0; j < (MINUTES_IN_DAY / interval) - 1; j += 1) {
-				startDate = startDate.plusMinutes(interval);
+			for (int j = 0; j < (MINUTES_IN_DAY / interval); j += 1) {
 				instrumentList.add(startDate);
+				startDate = startDate.plusMinutes(interval);
 			}
-			startDate = startDate.plusDays(1);
 		}
 	}
 
@@ -142,10 +143,17 @@ public class InstrumentGenerator {
 	 * @param output         compilation of instruments
 	 * @param isSysConf      boolean for which format to use
 	 */
-	private static void formatInstruments(List<LocalDateTime> instrumentList, StringBuilder output,
+	private static void formatOutput(List<LocalDateTime> instrumentList, StringBuilder output,
 			boolean isSysConf) {
 		final DateTimeFormatter intervalFormatter = DateTimeFormatter.ofPattern("MMddHHmm");
+
+		final String CLIENT_PREAMBLE =
+				"order-entry {\n\taddress  = 127.0.0.1\n\tport     = 4000\n\tusername = parity\n\tpassword = parity\n}\n\n";
+		final String SYSTEM_PREAMBLE =
+				"market-data {\n\tsession             = parity\n\tmulticast-interface = 127.0.0.1\n\tmulticast-group     = 224.0.0.1\n\tmulticast-port      = 5000\n\trequest-address     = 127.0.0.1\n\trequest-port        = 5001\n}\n\nmarket-report {\n\tsession             = parity\n\tmulticast-interface = 127.0.0.1\n\tmulticast-group     = 224.0.0.1\n\tmulticast-port      = 6000\n\trequest-address     = 127.0.0.1\n\trequest-port        = 6001\n}\n\norder-entry {\n\taddress = 127.0.0.1\n\tport    = 4000\n}\n\n";
+
 		if (isSysConf) {
+			output.append(CLIENT_PREAMBLE);
 			output.append("instruments = [\n");
 			final String sysFormat = "\t%s%n";
 			for (LocalDateTime date : instrumentList) {
@@ -154,9 +162,9 @@ public class InstrumentGenerator {
 			output.append("]\n");
 
 		} else {
-			output.append("instruments = {\n");
-			output.append("\tprice-integer-digits = 8\n");
-			output.append("\tsize-integer-digits  = 8\n\n");
+			output.append(SYSTEM_PREAMBLE);
+			output.append(
+					"instruments = {\n\tprice-integer-digits = 8\n\tsize-integer-digits  = 8\n\n");
 
 			final String clientFormat =
 					"\t%s {%n\t\tprice-fraction-digits = 3%n\t\tsize-fraction-digits  = 0%n\t}%n";

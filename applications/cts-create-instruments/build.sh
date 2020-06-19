@@ -1,5 +1,5 @@
 #!/bin/sh
 
-javac InstrumentGenerator.java
+javac ConfigurationGenerator.java
 
-jar cfe instruments.jar InstrumentGenerator InstrumentGenerator.class
+jar cfe config-gen.jar ConfigurationGenerator ConfigurationGenerator.class
