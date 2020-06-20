@@ -22,7 +22,6 @@ public class MarketCreateTenderPayload {
 	private long quantity;
 	private long price;
 	private long ctsTenderId;
-	// TODO in NIST-CTS-Agents - ensure that this type has interval and expireTime
 	BridgeInterval bridgeInterval;
 	BridgeInstant expireTime;
 
@@ -54,10 +53,21 @@ public class MarketCreateTenderPayload {
 		String tempString;	
 
 		tempString = (tempSide == SideType.BUY)? "B" : "S";	
+		
+		System.err.println(
+				"MarketCreateTenderPayload.toString convert interval to instrument name '" +
+				this.getBridgeInterval().toInstrumentName() + "' " + 
+				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval " +
+				this.bridgeInterval.asInterval().toString());
+		
 		return (info + " side " + tempString + " quantity " +
 				quantity + " price " + price +
-				" CtsTenderId " + ctsTenderId );
-	}
+				" CtsTenderId " + ctsTenderId +
+				" bridgeInterval " + this.bridgeInterval.toString() +
+				" expireTime " + this.expireTime.toString()
+				);
+		
+		}
 	
     @Override
     public boolean equals(Object o) {

@@ -34,9 +34,9 @@ import java.util.concurrent.ArrayBlockingQueue;
  * 
  * 		The LME writes JSON-serialized MarketCreateTenderPayloads which
  * 		will be read by this CtsSockerServer, deserialized, and put on
- * 		bridge.createTenderQueue for further processing in CtsBridge.
+ * 		bridge.marketCreateTenderQueue for further processing in CtsBridge.
  * 
- * 		CtsBridge loops, taking the first element of createTenderQueue,
+ * 		CtsBridge loops, taking the first element of marketCreateTenderQueue,
  * 		inserts the information into the POE order entry service.
  * 		That call to bridgeExecute returns the parity OrderId.	
  */
@@ -53,14 +53,16 @@ public class CtsSocketServer extends Thread	{
     // Socket Server in Market for CreateTender 
     public static final int MARKET_PORT = 39402;
     public static int port = MARKET_PORT;
-    String jsonReceived = null;
-    MarketCreateTenderPayload payload;
+
     
     final ObjectMapper mapper = new ObjectMapper();
-    CtsBridge bridge;	// to access bridge.createTenderQueue
+    CtsBridge bridge;	// to access bridge.marketCreateTenderQueue
 
     @Override
     public void run() {
+        String jsonReceived = null;
+        MarketCreateTenderPayload payload;
+        
     	//	port is set in constructor or by initializer
      		System.err.println("CtsSocketServer.run() port: " + port +
     		" '" + Thread.currentThread().getName() + "'");
@@ -90,14 +92,11 @@ public class CtsSocketServer extends Thread	{
             	System.err.println("CtsSocketServer.run received: " +
               		payload.toString());
                 
-                // Put on bridge.createTenderQueue for processing by CtsBridge
-//              System.err.println("CtsSocketServer.run before createTenderQueue.put " +
-//            		Thread.currentThread().getName());
-               
-            	bridge.createTenderQueue.put(payload);
+                // Put on bridge.marketCreateTenderQueue for processing by CtsBridge
+            	bridge.marketCreateTenderQueue.put(payload);
             	
-//              	System.err.println("CtsSocketServer.run after createTenderQueue.put size " + 
-//              			bridge.createTenderQueue.size() + " " +Thread.currentThread().getName());
+//              	System.err.println("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
+//              			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());
     		}            
         } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());

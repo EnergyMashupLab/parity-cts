@@ -157,7 +157,7 @@ class EnterCommand implements Command {
         client.getOrderEntry().send(message);
 
         /*
-         *	WTC Return he orderId just sent as a String
+         *	WTC Return the orderId just sent as a String
          */
         return new String(message.orderId);
     }
