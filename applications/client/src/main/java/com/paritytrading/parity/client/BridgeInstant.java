@@ -29,6 +29,11 @@ public class BridgeInstant {
 		return Instant.parse(instantString);
 	}
 
+	@Override
+	public String toString()	{
+		return "BridgeInstant" + asInstant().toString();
+	}
+	
 	public String getInstantString() {
 		return instantString;
 	}

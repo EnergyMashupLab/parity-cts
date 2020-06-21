@@ -54,16 +54,16 @@ public class MarketCreateTenderPayload {
 
 		tempString = (tempSide == SideType.BUY)? "B" : "S";	
 		
-		System.err.println(
-				"MarketCreateTenderPayload.toString convert interval to instrument name '" +
-				this.getBridgeInterval().toInstrumentName() + "' " + 
-				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval " +
-				this.bridgeInterval.asInterval().toString());
+//		System.err.println(
+//				"MarketCreateTenderPayload.toString interval to instrument '" +
+//				this.getBridgeInterval().toInstrumentName() + "' " + 
+//				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval "
+//				);
 		
 		return (info + " side " + tempString + " quantity " +
 				quantity + " price " + price +
 				" CtsTenderId " + ctsTenderId +
-				" bridgeInterval " + this.bridgeInterval.toString() +
+				" bridgeInterval " + this.bridgeInterval.asInterval().toString()     +
 				" expireTime " + this.expireTime.toString()
 				);
 		
