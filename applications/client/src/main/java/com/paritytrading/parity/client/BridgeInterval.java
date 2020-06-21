@@ -31,8 +31,9 @@ public class BridgeInterval {
 
 	private long durationInMinutes = 0; // integral minutes
 	private BridgeInstant dtStart;
+	private Instant instant;
 	private static final DateTimeFormatter INSTANT_INSTRUMENT_FORMATTER =
-			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.systemDefault());
+			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("GMT"));
 
 	// TODO compare with CTS implementation; Jackson can't serialize java.time.Duration. First add
 	// explicit import java.time.Duration
@@ -50,6 +51,7 @@ public class BridgeInterval {
 	BridgeInterval(long durationInMinutes, Instant dtStart) {
 		this.durationInMinutes = durationInMinutes;
 		this.dtStart = new BridgeInstant(dtStart);
+		this.instant = dtStart;
 	}
 
 	BridgeInterval(CtsInterval ctsInterval) {
@@ -58,7 +60,7 @@ public class BridgeInterval {
 	}
 
 	CtsInterval asInterval() {
-		return new CtsInterval(durationInMinutes, dtStart.asInstant());
+		return new CtsInterval(durationInMinutes, instant);
 	}
 
 	public long getDurationInMinutes() {
@@ -83,7 +85,7 @@ public class BridgeInterval {
 	 * @return packed long
 	 */
 	public long toPackedLong() {
-		return ASCII.packLong(INSTANT_INSTRUMENT_FORMATTER.format(this.dtStart.asInstant()));
+		return ASCII.packLong(INSTANT_INSTRUMENT_FORMATTER.format(this.instant));
 	}
 
 	/**
@@ -92,6 +94,6 @@ public class BridgeInterval {
 	 * @return string matching the form {@code MMddHHmm}
 	 */
 	public String toInstrumentName() {
-		return INSTANT_INSTRUMENT_FORMATTER.format(this.dtStart.asInstant());
+		return INSTANT_INSTRUMENT_FORMATTER.format(this.instant);
 	}
 }
