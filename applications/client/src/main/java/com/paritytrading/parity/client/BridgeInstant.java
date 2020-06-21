@@ -15,7 +15,7 @@ public class BridgeInstant {
 	private String instantString = new String("");
 	private Instant instant;
 	private static final DateTimeFormatter INSTANT_INSTRUMENT_FORMATTER =
-			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("GMT"));
+			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("Z"));
 
 	BridgeInstant() {
 	}
