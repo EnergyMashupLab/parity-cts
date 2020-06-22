@@ -32,7 +32,7 @@ public class BridgeInterval {
 	private long durationInMinutes = 0; // integral minutes
 	private BridgeInstant dtStart;
 	private static final DateTimeFormatter INSTANT_INSTRUMENT_FORMATTER =
-			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.systemDefault());
+			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("Z"));
 
 	// TODO compare with CTS implementation; Jackson can't serialize java.time.Duration. First add
 	// explicit import java.time.Duration

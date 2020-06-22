@@ -207,9 +207,9 @@ class CtsBridge extends Thread {
 			//	this is the default 60 minute duration
 			instrument = marketCreateTender.getBridgeInterval().toPackedLong();
 			
-			System.err.println("CtsBridge.run() before bridgeExecute. instrument " +
-					instrument + " Instrument Name " +
-					marketCreateTender.getBridgeInterval().toInstrumentName());
+//			System.err.println("CtsBridge.run() before bridgeExecute. instrument " +
+//					instrument + " Instrument Name " +
+//					marketCreateTender.getBridgeInterval().toInstrumentName());
 			
 			if ( marketCreateTender.getSide() == SideType.BUY)	{	//	buySide
 				 try	{

@@ -89,8 +89,8 @@ public class CtsSocketServer extends Thread	{
                 payload = mapper.readValue(
                 		jsonReceived, MarketCreateTenderPayload.class);
                                 
-            	System.err.println("CtsSocketServer.run received: " +
-              		payload.toString());
+//            	System.err.println("CtsSocketServer.run received: " +
+//              		payload.toString());
                 
                 // Put on bridge.marketCreateTenderQueue for processing by CtsBridge
             	bridge.marketCreateTenderQueue.put(payload);
