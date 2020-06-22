@@ -98,7 +98,6 @@
   </dependencies>
 
   <build>
-    <finalName>parity-client</finalName>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
