@@ -158,7 +158,7 @@ class CtsBridge extends Thread {
 	public void run()	{	// Thread for processing requests to and from LME
 		MarketCreateTenderPayload mapReturnValue = null;
 		long instrument = 4702127773838221344L;		//	Default - AAPL initial functionality tests
-		System.err.println("CtsBridge.run " + Thread.currentThread().getName());
+//		System.err.println("CtsBridge.run " + Thread.currentThread().getName());
 
 		/*  
 		 *  This CtsBridge thread reads Tenders from marketCreateTenderQueue (received from LME) and inject to market
@@ -179,11 +179,11 @@ class CtsBridge extends Thread {
 		ctsSocketClient = new CtsSocketClient(LME_PORT, this);	// thread sends MarketCreateTransactionPayloads
 	 	ctsSocketClient.start();
 		
-		System.err.println("Started SocketServer and SocketClient");
+//		System.err.println("Started SocketServer and SocketClient");
 		
 		while (true) {
 			//	CtsSocketServer fills marketCreateTenderQueue	from LME
-			//	Take first and send as order entry to Parity
+			//	Take first and send as order entxry to Parity
 			
 			try {
 				marketCreateTender = marketCreateTenderQueue.take();	// blocking

@@ -82,8 +82,8 @@ public class CtsSocketClient	extends Thread {
 		boolean tryingToCreateSocket = true;
 		long retryCount = 0;
 		
- 		System.err.println("CtsSocketClient.run() port: " + port +
- 				" ip " + ip + " " + Thread.currentThread().getName());
+// 		System.err.println("CtsSocketClient.run() port: " + port +
+// 				" ip " + ip + " " + Thread.currentThread().getName());
  		
  		// Sleep to improve probability of server socket being ready in CTS
  		try {

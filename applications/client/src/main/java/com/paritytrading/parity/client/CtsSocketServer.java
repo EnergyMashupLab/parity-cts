@@ -64,8 +64,8 @@ public class CtsSocketServer extends Thread	{
         MarketCreateTenderPayload payload;
         
     	//	port is set in constructor or by initializer
-     		System.err.println("CtsSocketServer.run() port: " + port +
-    		" '" + Thread.currentThread().getName() + "'");
+//     		System.err.println("CtsSocketServer.run() port: " + port +
+//    		" '" + Thread.currentThread().getName() + "'");
    	
         try {
             serverSocket = new ServerSocket(port);
@@ -82,16 +82,16 @@ public class CtsSocketServer extends Thread	{
             	
 //            	System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
             	jsonReceived = in.readLine();     
-//            	System.err.println("CtsSocketServer.run: after in.eadLine jsonReceived is '" + 
+//            	System.err.println("CtsSocketServer.run: after in.readLine jsonReceived is '" + 
 //            		jsonReceived  + "' Thread " + Thread.currentThread().getName());
                 
                 if (jsonReceived == null)	break;
                 payload = mapper.readValue(
                 		jsonReceived, MarketCreateTenderPayload.class);
                                 
-//            	System.err.println("CtsSocketServer.run received: " +
+//            	System.err.println("CtsSocketServer.run received and put on marketCreateTenderQueue " +
 //              		payload.toString());
-                
+//                
                 // Put on bridge.marketCreateTenderQueue for processing by CtsBridge
             	bridge.marketCreateTenderQueue.put(payload);
             	
