@@ -13,6 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright 2019-2020 The Energy Mashup Lab
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paritytrading.parity.client;
 
 import com.paritytrading.parity.net.poe.POE;
@@ -53,41 +69,38 @@ class Events implements POEClientListener {
 
 	@Override
 	public void orderAccepted(POE.OrderAccepted message) {
-		String s = new String(message.orderId);
+		String parityOrderId = new String(message.orderId);
 
-		// HOOK - Insert call to CtsBridge as needed
-//		System.out.println("Events: start of orderAccepted " + s);
-		
+//		System.out.println("Events.orderAccepted " + parityOrderId);
+		CtsBridge.orderAccepted(message, parityOrderId);
 		add(new Event.OrderAccepted(message));
 	}
 
 	@Override
 	public void orderRejected(POE.OrderRejected message) {
-		String s = new String(message.orderId);
+		String parityOrderId = new String(message.orderId);
 
-		// HOOK - Insert call to CtsBridge as needed
-		System.out.println("Events: start of orderRejected " + s);
+//		System.out.println("Events.orderRejected " + parityOrderId);
+		CtsBridge.orderRejected(message, parityOrderId);
 		add(new Event.OrderRejected(message));
 	}
 
 	/*
 	 * POE.OrderExecuted.java includes attributes we need:
-	 * 
 	 * 		orderId - maps to CtsTenderId in CtsBridge 
 	 * 		quantity 
 	 * 		price 
+	 * 		matchNumber
 	 * Not used by CTS
 	 * 		timestamp (on message)
 	 *		liquidityFlag
-	 *		matchNumber
 	 */
 	@Override
 	public void orderExecuted(POE.OrderExecuted message) {
 		String parityOrderId = new String(message.orderId);
-
-		// HOOK - Insert call to CtsBridge.orderExecuted
 		
-//		System.err.println("Events.orderExecuted " + Thread.currentThread().getName());
+//		System.err.println("Events.orderExecuted " + Thread.currentThread().getName() +
+//			" parityOrderId " + parityOrderId);
 		// Call to CtsBridge for processing
 		CtsBridge.orderExecuted(message, parityOrderId);
 		
@@ -96,10 +109,11 @@ class Events implements POEClientListener {
 
 	@Override
 	public void orderCanceled(POE.OrderCanceled message) {
-		String s = new String(message.orderId);
+		String parityOrderId = new String(message.orderId);
 
 		// HOOK - Insert call to CtsBridge as needed
-		System.out.println("Events: start of orderCanceled " + s);
+		System.out.println("Events.orderCanceled " + parityOrderId +
+				" Reason " + message.reason);
 		add(new Event.OrderCanceled(message));
 	}
 
