@@ -1,3 +1,5 @@
+package configuration;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -108,43 +110,44 @@ public class ConfigurationGenerator {
 		}
 
 		long numDays = Long.parseLong(args[argPos]);
-		List<LocalDateTime> instrumentList = new ArrayList<>();
-		populateInstruments(instrumentList, startDate, interval, numDays);
+		List<LocalDateTime> instrumentList = populateInstruments(startDate, interval, numDays);
 
-		StringBuilder output = new StringBuilder();
-		formatOutput(instrumentList, output, sysFlag);
+		StringBuilder configText = formatOutput(instrumentList, sysFlag);
 
-		writeOutput(filepath, output.toString());
+		writeOutput(filepath, configText.toString());
 	}
 
 	/**
-	 * Adds instruments to the {@code instrumentList} incrementing by minutes in interval and number
+	 * Generates a list of instruments incrementing by minutes in interval and number
 	 * of days.
 	 * 
-	 * @param instrumentList list to add instruments to
-	 * @param startDate      start date of intervals
-	 * @param interval       number of minutes between intervals
-	 * @param numDays        days that intervals should span
+	 * @param startDate start date of intervals
+	 * @param interval  number of minutes between intervals
+	 * @param numDays   days that intervals should span
+	 * @return list to of instruments
 	 */
-	private static void populateInstruments(List<LocalDateTime> instrumentList,
-			LocalDateTime startDate, int interval, long numDays) {
+	static List<LocalDateTime> populateInstruments(LocalDateTime startDate, int interval,
+			long numDays) {
+		List<LocalDateTime> instrumentList = new ArrayList<>();
+
 		for (int i = 0; i < numDays; i++) {
 			for (int j = 0; j < (MINUTES_IN_DAY / interval); j += 1) {
 				instrumentList.add(startDate);
 				startDate = startDate.plusMinutes(interval);
 			}
 		}
+
+		return instrumentList;
 	}
 
 	/**
 	 * Formats instruments in {@code instrumentList} into the string {@code output}.
 	 * 
 	 * @param instrumentList list of instruments in interval form
-	 * @param output         compilation of instruments
 	 * @param isSysConf      boolean for which format to use
+	 * @return formatted configuration text
 	 */
-	private static void formatOutput(List<LocalDateTime> instrumentList, StringBuilder output,
-			boolean isSysConf) {
+	static StringBuilder formatOutput(List<LocalDateTime> instrumentList, boolean isSysConf) {
 		final DateTimeFormatter intervalFormatter = DateTimeFormatter.ofPattern("MMddHHmm");
 
 		final String CLIENT_PREAMBLE =
@@ -152,27 +155,30 @@ public class ConfigurationGenerator {
 		final String SYSTEM_PREAMBLE =
 				"market-data {\n\tsession             = parity\n\tmulticast-interface = 127.0.0.1\n\tmulticast-group     = 224.0.0.1\n\tmulticast-port      = 5000\n\trequest-address     = 127.0.0.1\n\trequest-port        = 5001\n}\n\nmarket-report {\n\tsession             = parity\n\tmulticast-interface = 127.0.0.1\n\tmulticast-group     = 224.0.0.1\n\tmulticast-port      = 6000\n\trequest-address     = 127.0.0.1\n\trequest-port        = 6001\n}\n\norder-entry {\n\taddress = 127.0.0.1\n\tport    = 4000\n}\n\n";
 
+		StringBuilder confText = new StringBuilder();
 		if (isSysConf) {
-			output.append(CLIENT_PREAMBLE);
-			output.append("instruments = [\n");
-			final String sysFormat = "\t%s%n";
+			confText.append(SYSTEM_PREAMBLE);
+			confText.append("instruments = [\n");
+			final String sysFormat = "\t%s\n";
 			for (LocalDateTime date : instrumentList) {
-				output.append(String.format(sysFormat, date.format(intervalFormatter)));
+				confText.append(String.format(sysFormat, date.format(intervalFormatter)));
 			}
-			output.append("]\n");
+			confText.append("]\n");
 
 		} else {
-			output.append(SYSTEM_PREAMBLE);
-			output.append(
+			confText.append(CLIENT_PREAMBLE);
+			confText.append(
 					"instruments = {\n\tprice-integer-digits = 8\n\tsize-integer-digits  = 8\n\n");
 
 			final String clientFormat =
-					"\t%s {%n\t\tprice-fraction-digits = 3%n\t\tsize-fraction-digits  = 0%n\t}%n";
+					"\t%s {\n\t\tprice-fraction-digits = 3\n\t\tsize-fraction-digits  = 0\n\t}\n";
 			for (LocalDateTime date : instrumentList) {
-				output.append(String.format(clientFormat, date.format(intervalFormatter)));
+				confText.append(String.format(clientFormat, date.format(intervalFormatter)));
 			}
-			output.append("}\n");
+			confText.append("}\n");
 		}
+
+		return confText;
 	}
 
 	/**
@@ -183,7 +189,7 @@ public class ConfigurationGenerator {
 	 * @param filepath path to write to
 	 * @param output   formatted instruments
 	 */
-	private static void writeOutput(String filepath, String output) {
+	static void writeOutput(String filepath, String output) {
 		if (filepath != null) {
 			File file = new File(filepath);
 			if (file.exists()) {

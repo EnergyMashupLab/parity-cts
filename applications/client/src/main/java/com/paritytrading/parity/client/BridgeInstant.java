@@ -13,16 +13,14 @@ import com.paritytrading.foundation.ASCII;
 
 public class BridgeInstant {
 	private String instantString = new String("");
-//	private Instant instant;
 	private static final DateTimeFormatter INSTANT_INSTRUMENT_FORMATTER =
-		DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("Z"));
+			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("Z"));
 
 	BridgeInstant() {
 	}
 
 	BridgeInstant(Instant javaInstant) {
 		instantString = javaInstant.toString();
-//		this.instant = javaInstant;
 	}
 
 	Instant asInstant() {
@@ -48,7 +46,6 @@ public class BridgeInstant {
 	 * @return packed long
 	 */
 	public long toPackedLong() {
-//		return ASCII.packLong(INSTANT_INSTRUMENT_FORMATTER.format(this.instant));
 		return ASCII.packLong(INSTANT_INSTRUMENT_FORMATTER.format(this.asInstant()));
 	}
 
