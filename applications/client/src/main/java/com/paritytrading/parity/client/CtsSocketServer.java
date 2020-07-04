@@ -35,6 +35,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.AbstractQueue;
 import java.util.AbstractCollection;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ArrayBlockingQueue;
 
 //import java.util.HashMap;
@@ -63,6 +65,7 @@ public class CtsSocketServer extends Thread	{
     private PrintWriter out;
 //	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
     private BufferedReader in;
+    private CyclicBarrier clientSocketBarrier;
     
     // Socket Server in LME for CreateTransaction
     public static final int LME_PORT = 39401;
@@ -86,6 +89,12 @@ public class CtsSocketServer extends Thread	{
         try {
             serverSocket = new ServerSocket(port);
             clientSocket = serverSocket.accept();
+            try {
+                clientSocketBarrier.await();
+            } catch(BrokenBarrierException e) {
+                System.err.println("clientSocketBarrier was broken.");
+            }
+
             if (clientSocket == null)
             	System.err.println("CtsSocketServer: clientSocket null after accept");
             out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -151,11 +160,12 @@ public class CtsSocketServer extends Thread	{
     	// TODO Lambda Expression for separate thread - current is in thread
     }
     
-    public CtsSocketServer(int port, CtsBridge bridge)	{
+    public CtsSocketServer(int port, CtsBridge bridge, CyclicBarrier barrier)	{
 //    	System.err.println("CtsSocketServer: constructor bridge and Port: " 
 //    			+ port + " " + Thread.currentThread().getName() );
     	this.bridge = bridge;
-    	this.port = port;
+        this.port = port;
+        this.clientSocketBarrier = barrier;
     	if (bridge == null)	{
     		System.err.println("CtsSocketServer: constructor:this.bridge is null");
     	}

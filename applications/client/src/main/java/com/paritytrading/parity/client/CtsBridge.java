@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CyclicBarrier;
 
 //	import org.apache.logging.log4j.LogManager;
 //	import org.apache.logging.log4j.Logger;
@@ -57,6 +58,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.AbstractQueue;
 import java.util.AbstractCollection;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /*
@@ -130,7 +132,8 @@ class CtsBridge extends Thread {
     String tempParityOrderId = null;
     
 	// CtsSocketClient sends MarketCreateTransactionPayloads from its queue to the LME
-    static CtsSocketClient ctsSocketClient;	// constructed and started later
+	static CtsSocketClient ctsSocketClient;	// constructed and started later
+	final private CyclicBarrier clientSocketBarrier = new CyclicBarrier(2);
     public static ArrayBlockingQueue<MarketCreateTransactionPayload> createTransactionQueue = new ArrayBlockingQueue<>(200);
     MarketCreateTransactionPayload createTransaction;
 	
@@ -189,9 +192,18 @@ class CtsBridge extends Thread {
 		if (DEBUG_JSON) System.err.println("CtsBridge run before new SocketServer: currentThread name: '" +
 						Thread.currentThread().getName() + "'");
 		
-		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this);	// thread enters MarketCreateTenderPayloads
+		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this, clientSocketBarrier); // thread enters MarketCreateTenderPayloads
 		ctsSocketServer.start();
 		
+		// Wait for ctsSocketServer gets a client then start the client connection to the LME
+		try {
+			clientSocketBarrier.await();
+		} catch(BrokenBarrierException e) {
+			System.err.println("The client socket barrier was broken.");
+		} catch(InterruptedException e) {
+			System.err.println("CtsBridge thread was interrupted before socket client start.");
+		}
+
 		ctsSocketClient = new CtsSocketClient(LME_PORT, this);	// thread sends MarketCreateTransactionPayloads
 	 	ctsSocketClient.start();
 		
