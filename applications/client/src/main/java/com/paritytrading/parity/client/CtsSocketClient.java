@@ -23,18 +23,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ArrayBlockingQueue;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Set;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /*
@@ -65,7 +54,6 @@ public class CtsSocketClient	extends Thread {
 
 	private Socket clientSocket;
 	private PrintWriter out;
-	private static InputStreamReader inStream;
 	private BufferedReader in;
 	
 	public static final int MARKET_PORT = 39402;
@@ -73,7 +61,6 @@ public class CtsSocketClient	extends Thread {
 	
 	private static int port = LME_PORT;	// CreateTransaction from Market to LME
 	private static String ip = "127.0.0.1";	
-	private static String hostName = "localhost";
 	CtsBridge bridge;	// to access bridge.createTransactionQueue
 	
 	public CtsSocketClient()	{
@@ -85,7 +72,7 @@ public class CtsSocketClient	extends Thread {
 //    	System.err.println("CtsSocketClient: constructor 2 parameters bridge port " +
 //    			port + " ip " + ip + " " + Thread.currentThread().getName());
     	this.bridge = bridge;
-    	this.port = port;
+    	CtsSocketClient.port = port;
     	if (bridge == null)	{
     		System.err.println("CtsSocketClient: constructor:this.bridge is null");
     	}
@@ -95,8 +82,6 @@ public class CtsSocketClient	extends Thread {
 	public void run() {
 		MarketCreateTransactionPayload createTransaction;
 		String jsonString = null;	// for JSON string
-		boolean tryingToCreateSocket = true;
-		long retryCount = 0;
 		
 // 		System.err.println("CtsSocketClient.run() port: " + port +
 // 				" ip " + ip + " " + Thread.currentThread().getName());
@@ -135,7 +120,7 @@ public class CtsSocketClient	extends Thread {
 //              	bridge.createTransactionQueue.size() + " " +
 //              	Thread.currentThread().getName());
               	
-              	createTransaction = bridge.createTransactionQueue.take();
+              	createTransaction = CtsBridge.createTransactionQueue.take();
               	
 //              System.err.println(
 //              	"CtsSocketClient.run after bridge.createTransactionQueue.take size " +
