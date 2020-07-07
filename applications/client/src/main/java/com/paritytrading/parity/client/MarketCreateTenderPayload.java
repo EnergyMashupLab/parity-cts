@@ -16,11 +16,7 @@
 
 package com.paritytrading.parity.client;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.time.*;
-
-import com.paritytrading.parity.client.CtsInterval;
 
 /*
  * Sent by the LME to the Market with information to be

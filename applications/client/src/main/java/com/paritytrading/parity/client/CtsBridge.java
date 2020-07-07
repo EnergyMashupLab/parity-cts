@@ -16,49 +16,14 @@
 
 package com.paritytrading.parity.client;
 
-import com.paritytrading.parity.client.TerminalClient.*;
-import com.paritytrading.parity.client.EnterCommand.*;
-
-import com.paritytrading.foundation.ASCII;
 import com.paritytrading.parity.net.poe.POE;
 import com.paritytrading.parity.util.Instrument;
 import com.paritytrading.parity.util.Instruments;
 import java.io.IOException;
-import java.nio.channels.ClosedChannelException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 import java.util.Random;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.*;
-import com.fasterxml.jackson.datatype.jsr310.*;
-
-import java.util.concurrent.atomic.AtomicLong;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CyclicBarrier;
-
-//	import org.apache.logging.log4j.LogManager;
-//	import org.apache.logging.log4j.Logger;
-
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.AbstractQueue;
-import java.util.AbstractCollection;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /*
@@ -105,9 +70,9 @@ class CtsBridge extends Thread {
 	
 	public CtsBridge(TerminalClient client, Events events, Instruments instruments)	{
 		// store information needed to call EnterCommand.bridgeExecute() to enter orders
-		this.client = client;
 		this.events = events;
-		this.instruments = instruments;
+		CtsBridge.client = client;
+		CtsBridge.instruments = instruments;
 	}
 
 	// set by TerminalClient call to this.setSide()
@@ -155,11 +120,6 @@ class CtsBridge extends Thread {
 	private Instrument localInstrument;
 	private static long[] quantity = new long[10];
 	private static long[] price = new long[10];
-	private static MarketCreateTenderPayload[] createTenderPayload = 
-					new MarketCreateTenderPayload[10];
-	private static String[] json = new String[10];
-	private static MarketCreateTenderPayload[] deserializedTenderPayload = 
-					new MarketCreateTenderPayload[10];	
 	private static String[] orderIds = new String[10];
 	
 	// for randomized quantity and price
@@ -438,7 +398,7 @@ class CtsBridge extends Thread {
 	}
 	
 	public void setClient(TerminalClient client) {
-		this.client = client;
+		CtsBridge.client = client;
 	}
 	
 	public EnterCommand getBuySide() {
@@ -446,7 +406,7 @@ class CtsBridge extends Thread {
 	}
 	
 	public void setBuySide(EnterCommand buyCmd) {
-		this.buySide = buyCmd;
+		CtsBridge.buySide = buyCmd;
 	}
 	
 	public EnterCommand getSellSide() {
@@ -454,7 +414,7 @@ class CtsBridge extends Thread {
 	}
 	
 	public void setSellSide(EnterCommand sellCmd) {
-		this.sellSide = sellCmd;
+		CtsBridge.sellSide = sellCmd;
 	}
 	
 	public Instruments getInstruments() {
@@ -462,7 +422,7 @@ class CtsBridge extends Thread {
 	}
 	
 	public void setInstruments(Instruments instruments) {
-		this.instruments = instruments;
+		CtsBridge.instruments = instruments;
 	}
 
 //	/*
