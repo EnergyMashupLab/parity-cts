@@ -16,26 +16,11 @@
 
 package com.paritytrading.parity.client;
 
-import com.paritytrading.parity.client.TerminalClient.*;
-import com.paritytrading.parity.client.EnterCommand.*;
-
 import java.net.*;
 import java.io.*;
-import java.lang.Runnable;
 import java.lang.Thread;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.ser.std.*;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.AbstractQueue;
-import java.util.AbstractCollection;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ArrayBlockingQueue;
 
 //import java.util.HashMap;
 //import java.util.Map;
@@ -145,7 +130,7 @@ public class CtsSocketServer extends Thread	{
 //    	System.err.println(
 //    		"CtsSocketServer: constructor 1 arg port: " + port + " " +
 //    		Thread.currentThread().getName() );
-    	this.port = port;
+    	CtsSocketServer.port = port;
     	
     	CtsSocketServer server = new CtsSocketServer();	
     	// TODO Lambda Expression for separate thread - current is in thread
@@ -155,7 +140,7 @@ public class CtsSocketServer extends Thread	{
 //    	System.err.println("CtsSocketServer: constructor bridge and Port: " 
 //    			+ port + " " + Thread.currentThread().getName() );
     	this.bridge = bridge;
-    	this.port = port;
+    	CtsSocketServer.port = port;
     	if (bridge == null)	{
     		System.err.println("CtsSocketServer: constructor:this.bridge is null");
     	}
