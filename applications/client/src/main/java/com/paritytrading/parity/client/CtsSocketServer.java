@@ -17,6 +17,8 @@
 package com.paritytrading.parity.client;
 
 import java.net.*;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.io.*;
 import java.lang.Thread;
 
