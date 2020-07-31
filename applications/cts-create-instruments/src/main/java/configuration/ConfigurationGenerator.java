@@ -26,6 +26,10 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 /**
  * This program generates instruments from a specified interval, start date, and number of days.
  * 
@@ -43,6 +47,10 @@ import java.util.List;
  * </ul>
  */
 public class ConfigurationGenerator {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(ConfigurationGenerator.class);
 
 	private static final int MINUTES_IN_DAY = 1440;
 

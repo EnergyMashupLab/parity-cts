@@ -21,7 +21,15 @@ import com.paritytrading.parity.util.Instruments;
 import com.paritytrading.parity.util.TableHeader;
 import java.util.Scanner;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 class OrdersCommand implements Command {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(OrdersCommand.class);
 
     @Override
     public void execute(TerminalClient client, Scanner arguments) {

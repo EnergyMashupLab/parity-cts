@@ -28,6 +28,9 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BrokenBarrierException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /*
 * CtsBridge is used to transform and send and receive messages between the LME and the 
 * enhanced Parity Terminal Client, thus entering Parity orders and detecting Parity
@@ -59,6 +62,8 @@ import java.util.concurrent.BrokenBarrierException;
 
 // started in TerminalClient
 class CtsBridge extends Thread {	
+
+	private static final Logger logger = LogManager.getLogger(CtsBridge.class);
 
 	public CtsBridge() {
 	}

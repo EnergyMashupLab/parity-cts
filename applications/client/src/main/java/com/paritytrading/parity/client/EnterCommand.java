@@ -41,7 +41,15 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.io.UnsupportedEncodingException;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 class EnterCommand implements Command {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(EnterCommand.class);
 
     private final POE.EnterOrder message;
     

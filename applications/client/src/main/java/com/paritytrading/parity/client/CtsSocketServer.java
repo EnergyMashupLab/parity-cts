@@ -29,6 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 //import java.util.Iterator;
 //import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /*
  * Overview:
  * 		This CtsSocketServer accepts connections on MARKET_PORT. The
@@ -45,6 +48,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 
 public class CtsSocketServer extends Thread	{
+	
+	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
+	
     private ServerSocket serverSocket;
     private Socket clientSocket;
     private PrintWriter out;

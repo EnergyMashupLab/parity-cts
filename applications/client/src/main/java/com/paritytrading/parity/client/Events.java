@@ -36,6 +36,10 @@ import com.paritytrading.parity.net.poe.POEClientListener;
 import java.util.ArrayList;
 import java.util.List;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 /*
  *	WTC
  *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
@@ -53,6 +57,10 @@ import java.util.List;
  *      public final String orderId;
  */
 class Events implements POEClientListener {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(Events.class);
 
 	private final List<Event> events;
 

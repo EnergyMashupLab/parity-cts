@@ -26,10 +26,10 @@ import java.net.Socket;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/*
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-*/
+
 
 /*
  * 	This socket client communicates with the LME for MarketCreateTransactionPayloads.
@@ -47,8 +47,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CtsSocketClient	extends Thread {
 
-//	private static final Logger logger = LogManager.getLogger(
-//			CtsSocketClient.class);
+	private static final Logger logger = LogManager.getLogger(CtsSocketClient.class);
 	
 	final ObjectMapper mapper = new ObjectMapper();
 
