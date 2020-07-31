@@ -145,6 +145,7 @@ class CtsBridge extends Thread {
 		MarketCreateTenderPayload mapReturnValue = null;
 		long instrument = 4702127773838221344L;		//	Default - AAPL initial functionality tests
 //		System.err.println("CtsBridge.run " + Thread.currentThread().getName());
+		logger.debug("CtsBridge.run " + Thread.currentThread().getName());
 
 		/*  
 		 *  This CtsBridge thread reads Tenders from marketCreateTenderQueue (received from LME) and inject to market
