@@ -68,9 +68,11 @@ public class ConfigurationGenerator {
 
 		final int MIN_ARGS = 4;
 		if (args.length < MIN_ARGS) {
-			System.err.println(USAGE);
+			// System.err.println(USAGE);
+			logger.debug(USAGE);
 			if (args.length == 1 && args[0].equals("--help")) {
-				System.err.printf("%n%s", OPTIONS);
+				// System.err.printf("%n%s", OPTIONS);
+				logger.debug.printf("%n%s", OPTIONS);
 			}
 			System.exit(0);
 		}
@@ -88,7 +90,8 @@ public class ConfigurationGenerator {
 					if (argPos < args.length) {
 						filepath = args[argPos++];
 					} else {
-						System.err.println("-f requires filename");
+						// System.err.println("-f requires filename");
+						logger.debug("-f requires filename");
 					}
 					break;
 				case "-s":
@@ -98,20 +101,27 @@ public class ConfigurationGenerator {
 					clientFlag = true;
 					break;
 				default:
-					System.err.println(USAGE);
-					System.err.println(arg.concat(" is not a valid option"));
+					// System.err.println(USAGE);
+					logger.debug(USAGE);
+					// System.err.println(arg.concat(" is not a valid option"));
+					logger.debug(arg.concat(" is not a valid option"));
 					System.exit(1);
 					break;
 			}
 		}
 		if (argPos + 2 >= args.length) {
-			System.err.println(USAGE);
-			System.err.println("Missing arguments");
+			// System.err.println(USAGE);
+			logger.debug(USAGE);
+			// System.err.println("Missing arguments");
+			logger.debug("Missing arguments");
 			System.exit(1);
 		} else if ((sysFlag && clientFlag) || (!sysFlag && !clientFlag)) {
-			System.err.println(USAGE);
-			System.err.println("Can only output one type of configuration at a time");
-			System.err.println("Must choose system OR client configuration output");
+			// System.err.println(USAGE);
+			logger.debug(USAGE);
+			// System.err.println("Can only output one type of configuration at a time");
+			logger.debug("Can only output one type of configuration at a time");
+			// System.err.println("Must choose system OR client configuration output");
+			logger.debug("Must choose system OR client configuration output");
 			System.exit(1);
 		}
 
@@ -121,15 +131,18 @@ public class ConfigurationGenerator {
 		try {
 			startDate = LocalDateTime.from(startFormatter.parse(args[argPos++] + "0000"));
 		} catch (DateTimeParseException e) {
-			System.err.printf("Incorrect START_DAY argument%nUse the format: yyyyMMdd");
+			// System.err.printf("Incorrect START_DAY argument%nUse the format: yyyyMMdd");
+			logger.debug("Incorrect START_DAY argument%nUse the format: yyyyMMdd");
 			System.exit(1);
 		}
 
 		// Parse interval
 		int interval = Integer.parseInt(args[argPos++]);
 		if (interval > MINUTES_IN_DAY) {
-			System.err.println(USAGE);
-			System.err.println("Cannot use an interval over a day"); // Not sure if this is the spec
+			// System.err.println(USAGE);
+			logger.debug(USAGE);
+			// System.err.println("Cannot use an interval over a day"); // Not sure if this is the spec
+			logger.debug("Cannot use an interval over a day"); // Not sure if this is the spec
 			System.exit(1);
 		}
 
@@ -217,19 +230,24 @@ public class ConfigurationGenerator {
 		if (filepath != null) {
 			File file = new File(filepath);
 			if (file.exists()) {
-				System.out.println("Appending to file");
+				// System.out.println("Appending to file");
+				logger.debug("Appending to file");
 			} else {
-				System.out.println("Creating ".concat(filepath));
+				// System.out.println("Creating ".concat(filepath));
+				logger.debug("Creating ".concat(filepath));
 			}
 
 			try (FileWriter fr = new FileWriter(file, true)) {
 				fr.write(output);
 			} catch (FileNotFoundException e) {
-				System.err.println(
+				// System.err.println(
+				// 		"File could not be created because a directory in the filepath is not valid");
+				logger.debug(
 						"File could not be created because a directory in the filepath is not valid");
 				System.exit(1);
 			} catch (IOException e) {
-				System.err.println("Could not write to file");
+				// System.err.println("Could not write to file");
+				logger.debug("Could not write to file");
 				e.printStackTrace();
 				System.exit(1);
 			}

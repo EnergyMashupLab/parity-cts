@@ -56,6 +56,7 @@ class OrdersCommand implements Command {
         for (Order order : Orders.collect(client.getEvents())) {
         	// DEBUG
 //        	System.err.println("in OrdersCommand before print order is null? " + (order == null));
+            logger.debug("in OrdersCommand before print order is null? " + (order == null));
             printf("%s\n", order.format(client.getInstruments()));
         }
         printf("\n");

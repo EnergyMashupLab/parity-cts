@@ -63,17 +63,22 @@ public class CtsSocketClient	extends Thread {
 	CtsBridge bridge;	// to access bridge.createTransactionQueue
 	
 	public CtsSocketClient()	{
-    	System.err.println("CtsSocketClient: constructor no args. port " +
+    	// System.err.println("CtsSocketClient: constructor no args. port " +
+		// 		port + " ip " + ip + " " + Thread.currentThread().getName());
+		logger.debug("CtsSocketClient: constructor no args. port " +
     			port + " ip " + ip + " " + Thread.currentThread().getName());
 	}
 	
     public CtsSocketClient(int port, CtsBridge bridge)	{
 //    	System.err.println("CtsSocketClient: constructor 2 parameters bridge port " +
 //    			port + " ip " + ip + " " + Thread.currentThread().getName());
+		logger.debug("CtsSocketClient: constructor 2 parameters bridge port " +
+   				port + " ip " + ip + " " + Thread.currentThread().getName());
     	this.bridge = bridge;
     	CtsSocketClient.port = port;
     	if (bridge == null)	{
-    		System.err.println("CtsSocketClient: constructor:this.bridge is null");
+			// System.err.println("CtsSocketClient: constructor:this.bridge is null");
+			logger.debug("CtsSocketClient: constructor:this.bridge is null");
     	}
     }
     
@@ -84,31 +89,39 @@ public class CtsSocketClient	extends Thread {
 		
 // 		System.err.println("CtsSocketClient.run() port: " + port +
 // 				" ip " + ip + " " + Thread.currentThread().getName());
+		logger.debug("CtsSocketClient.run() port: " + port +
+				" ip " + ip + " " + Thread.currentThread().getName());
  		
  		// Sleep to improve probability of server socket being ready in CTS
  		try {
 			Thread.sleep(20*1000);
 		} 	catch (InterruptedException e) {
-			System.err.println("CtsSocketClient.run after sleep");
+			// System.err.println("CtsSocketClient.run after sleep");
+			logger.debug("CtsSocketClient.run after sleep");
 			e.printStackTrace();
 		}
 // 		System.err.println("CtsSocketClient.run after sleep");
+		logger.debug("CtsSocketClient.run after sleep");
  		
  		try {
 			clientSocket = new Socket(ip, port);
 			out = new PrintWriter(clientSocket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		} catch (UnknownHostException e) {
-			System.err.println("CtsSocketClient.run UnknownHost");
+			// System.err.println("CtsSocketClient.run UnknownHost");
+			logger.debug("CtsSocketClient.run UnknownHost");
 			e.printStackTrace();
 		} catch (IOException e) {
-			System.err.println("CtsSocketClient.run IOException");
+			// System.err.println("CtsSocketClient.run IOException");
+			logger.debug("CtsSocketClient.run IOException");
 			e.printStackTrace();
 		}
 // 		System.err.println("CtsSocketClient.run after new Socket");
+		logger.debug("CtsSocketClient.run after new Socket");
  				
 		if (clientSocket == null)	{
-			System.err.println("CtsSocketClient.run clientSocket null before loop");
+			// System.err.println("CtsSocketClient.run clientSocket null before loop");
+			logger.debug("CtsSocketClient.run clientSocket null before loop");
  		}
 			  
 	  while(true) {
@@ -118,6 +131,10 @@ public class CtsSocketClient	extends Thread {
 //              	"CtsSocketClient.run before bridge.createTransactionQueue.take size " +
 //              	bridge.createTransactionQueue.size() + " " +
 //              	Thread.currentThread().getName());
+				logger.debug(
+	             	"CtsSocketClient.run before bridge.createTransactionQueue.take size " +
+	             	bridge.createTransactionQueue.size() + " " +
+	             	Thread.currentThread().getName());
               	
               	createTransaction = CtsBridge.createTransactionQueue.take();
               	
@@ -125,40 +142,56 @@ public class CtsSocketClient	extends Thread {
 //              	"CtsSocketClient.run after bridge.createTransactionQueue.take size " +
 //              	bridge.createTransactionQueue.size() + " " +
 //              	Thread.currentThread().getName());
+				logger.debug(
+             		"CtsSocketClient.run after bridge.createTransactionQueue.take size " +
+             		bridge.createTransactionQueue.size() + " " +
+             		Thread.currentThread().getName());
 			
               	jsonString = mapper.writeValueAsString(createTransaction);
 
               	if (jsonString == null)	{
-              		System.err.println("CtsSocketClient.run loop: jsonString null - continue");
+					  // System.err.println("CtsSocketClient.run loop: jsonString null - continue");
+					  logger.debug("CtsSocketClient.run loop: jsonString null - continue");
               		continue;
               	}	
           		if (clientSocket == null) {
-              		System.err.println(
-              				"CtsSocketClient.run loop: clientSocket is null - continue");
+              		// System.err.println(
+					  // 		"CtsSocketClient.run loop: clientSocket is null - continue");
+					logger.debug(
+              			"CtsSocketClient.run loop: clientSocket is null - continue");
               		continue;
           		}
 //				System.err.println("clientSocket non-null");
+				logger.debug("clientSocket non-null");
 				
 				if (out == null)	{
-					System.err.println("out is null - continue");
+					// System.err.println("out is null - continue");
+					logger.debug("out is null - continue");
 					continue;
 				}	
 //				System.err.println("out is " + out.toString());
+				logger.debug("out is " + out.toString());
 //          	System.err.println(
 //          		"CtsSocketClient.run jsonString to send to Lme " + jsonString);
+				logger.debug(
+         		"CtsSocketClient.run jsonString to send to Lme " + jsonString);
 
           		out.println(jsonString);
           		    		
 //              System.err.println("CtsSocketClient.run Json string written to Lme " + jsonString);
-//		              	logger.debug("after println of json " + jsonString);		
+				logger.debug("CtsSocketClient.run Json string written to Lme " + jsonString);
+		        logger.debug("after println of json " + jsonString);		
 			} catch (InterruptedException e1) {
-				System.err.println("createTransactionQueue.take interrupted");
+				// System.err.println("createTransactionQueue.take interrupted");
+				logger.debug("createTransactionQueue.take interrupted");
 				e1.printStackTrace();
 			} catch (JsonProcessingException e2) {
-				System.err.println("JsonProcessingException: Input MarketCreateTenderPayload " + e2);
+				// System.err.println("JsonProcessingException: Input MarketCreateTenderPayload " + e2);
+				logger.debug("JsonProcessingException: Input MarketCreateTenderPayload " + e2);
 				e2.printStackTrace();
 			}	catch (NullPointerException e3)	{
-				System.err.println("NullPointerException: CtsSocketClient loop " + e3);
+				// System.err.println("NullPointerException: CtsSocketClient loop " + e3);
+				logger.debug("NullPointerException: CtsSocketClient loop " + e3);
 				e3.printStackTrace();
 			}
 		  }  
@@ -170,9 +203,10 @@ public class CtsSocketClient	extends Thread {
 			out.close();
 			clientSocket.close();
 	  } catch (IOException e) {
-		  System.err.println("CtsSocketClient.stopConnection " + e);
+		//   System.err.println("CtsSocketClient.stopConnection " + e);
+		  logger.debug("CtsSocketClient.stopConnection " + e);
 		  e.printStackTrace();	  
-//		  logger.debug("SocketClient stop IOException: " + e.getMessage());
+		  logger.debug("SocketClient stop IOException: " + e.getMessage());
 	  }
 	}
 }

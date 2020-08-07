@@ -123,7 +123,8 @@ class StockTicker {
     }
 
     private static void usage() {
-        System.err.println("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
+        // System.err.println("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
+        logger.debug("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
         System.exit(2);
     }
 

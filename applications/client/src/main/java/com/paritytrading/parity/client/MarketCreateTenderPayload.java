@@ -79,6 +79,11 @@ public class MarketCreateTenderPayload {
 //				this.getBridgeInterval().toInstrumentName() + "' " + 
 //				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval "
 //				);
+		logger.debug(
+				"MarketCreateTenderPayload.toString interval to instrument '" +
+				this.getBridgeInterval().toInstrumentName() + "' " + 
+				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval "
+				);
 		
 		return (info + " side " + tempString + " quantity " +
 				quantity + " price " + price +
