@@ -80,6 +80,7 @@ class Order {
         Instrument config = instruments.get(instrument);
         
 //        System.err.println("Order.format config=" + (config == null ? null : "non-null"));
+          logger.debug("Order.format config=" + (config == null ? null : "non-null"));
 
         String priceFormat = config.getPriceFormat();
         String sizeFormat  = config.getSizeFormat();
