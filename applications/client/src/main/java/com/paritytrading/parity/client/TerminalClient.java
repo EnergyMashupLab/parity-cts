@@ -307,6 +307,9 @@ class TerminalClient implements Closeable {
         String      orderEntryPassword = config.getString("order-entry.password");
 
         Instruments instruments = Instruments.fromConfig(config, "instruments");
+        
+        // WTC log4j2 setup in working directory
+        System.setProperty("log4j2.configurationFile","./log4j2.xml");
 
         // and open then run
         TerminalClient.open(new InetSocketAddress(orderEntryAddress, orderEntryPort),

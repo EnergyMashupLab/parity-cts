@@ -81,6 +81,20 @@
       <groupId>org.jvirtanen.util</groupId>
       <artifactId>util-extras</artifactId>
     </dependency>
+   
+    
+	<dependency>
+	  <groupId>org.apache.logging.log4j</groupId>
+	  <artifactId>log4j-api</artifactId>
+	  <version>2.13.3</version>
+	</dependency>
+	
+	<dependency>
+	  <groupId>org.apache.logging.log4j</groupId>
+	  <artifactId>log4j-core</artifactId>
+	  <version>2.13.3</version>
+	</dependency>
+
 
     <!-- Test dependencies -->
     <dependency>
@@ -118,9 +132,64 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      
+<!-- Try 3 with assembly -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <finalName>parity-client</finalName>
+              <archive>
+                <manifest>
+                  <mainClass>com.paritytrading.parity.client.TerminalClient</mainClass>
+                </manifest>
+              </archive>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <!-- second try via stackoverflow
+       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.4</version>
+        <configuration>
+          <outputFile>target/parity-client.jar</outputFile>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+              <mainClass>com.paritytrading.parity.client.TerminalClient</mainClass>
+            </transformer>
+          </transformers>
+            <createDependencyReducedPom>false</createDependencyReducedPom>
+            <filters>
+                <filter>
+                    <artifact>*:*</artifact>
+                    <excludes>
+                        <exclude>**/Log4j2Plugins.dat</exclude>
+                    </excludes>
+                </filter>
+            </filters>
+        </configuration>
+      </plugin>
+      -->
+      
+      
+      <!-- 
+       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.4</version>
         <configuration>
           <outputFile>target/parity-client.jar</outputFile>
           <transformers>
@@ -130,6 +199,9 @@
           </transformers>
         </configuration>
       </plugin>
+      -->
+      
+      
     </plugins>
   </build>
 
