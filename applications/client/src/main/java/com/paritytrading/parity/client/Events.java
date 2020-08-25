@@ -105,10 +105,9 @@ class Events implements POEClientListener {
 	public void orderExecuted(POE.OrderExecuted message) {
 		String parityOrderId = new String(message.orderId);
 		
-//		System.err.println("Events.orderExecuted " + Thread.currentThread().getName() +
-//			" parityOrderId " + parityOrderId);
 		logger.debug("Events.orderExecuted " + Thread.currentThread().getName() +
 			" parityOrderId " + parityOrderId);
+
 		// Call to CtsBridge for processing
 		CtsBridge.orderExecuted(message, parityOrderId);
 		
@@ -119,9 +118,13 @@ class Events implements POEClientListener {
 	public void orderCanceled(POE.OrderCanceled message) {
 		String parityOrderId = new String(message.orderId);
 
-		// HOOK - Insert call to CtsBridge as needed
-		System.out.println("Events.orderCanceled " + parityOrderId +
-				" Reason " + message.reason);
+		logger.debug("Events.orderCanceled " + parityOrderId +
+				" CanceledQuantity " + message.canceledQuantity +
+				 " Reason " + (char)message.reason);
+
+		// Call to CtsBridge for processing
+		CtsBridge.orderCanceled(message, parityOrderId);
+
 		add(new Event.OrderCanceled(message));
 	}
 
