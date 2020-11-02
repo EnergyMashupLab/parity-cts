@@ -28,6 +28,9 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BrokenBarrierException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /*
 * CtsBridge is used to transform and send and receive messages between the LME and the 
 * enhanced Parity Terminal Client, thus entering Parity orders and detecting Parity
@@ -59,6 +62,8 @@ import java.util.concurrent.BrokenBarrierException;
 
 // started in TerminalClient
 class CtsBridge extends Thread {	
+
+	private static final Logger logger = LogManager.getLogger(CtsBridge.class);
 
 	public CtsBridge() {
 	}
@@ -139,7 +144,8 @@ class CtsBridge extends Thread {
 	public void run()	{	// Thread for processing requests to and from LME
 		MarketCreateTenderPayload mapReturnValue = null;
 		long instrument = 4702127773838221344L;		//	Default - AAPL initial functionality tests
-//		System.err.println("CtsBridge.run " + Thread.currentThread().getName());
+		
+		logger.debug("CtsBridge.run " + Thread.currentThread().getName());
 
 		/*  
 		 *  This CtsBridge thread reads Tenders from marketCreateTenderQueue (received from LME) and inject to market
@@ -151,8 +157,9 @@ class CtsBridge extends Thread {
 		 *  Tender on NIO queue in Parity Client -- fast and nonblocking so no need for separate thread    
 		 */
 
-		if (DEBUG_JSON) System.err.println("CtsBridge run before new SocketServer: currentThread name: '" +
-						Thread.currentThread().getName() + "'");
+		if (DEBUG_JSON) {
+			logger.debug("CtsBridge run before new SocketServer: currentThread name: '" + Thread.currentThread().getName() + "'");
+		}
 		
 		ctsSocketServer = new CtsSocketServer(MARKET_PORT, this, clientSocketBarrier); // thread enters MarketCreateTenderPayloads
 		ctsSocketServer.start();
@@ -161,15 +168,15 @@ class CtsBridge extends Thread {
 		try {
 			clientSocketBarrier.await();
 		} catch(BrokenBarrierException e) {
-			System.err.println("The client socket barrier was broken.");
+			logger.debug("The client socket barrier was broken.");
 		} catch(InterruptedException e) {
-			System.err.println("CtsBridge thread was interrupted before socket client start.");
+			logger.debug("CtsBridge thread was interrupted before socket client start.");
 		}
 
 		ctsSocketClient = new CtsSocketClient(LME_PORT, this);	// thread sends MarketCreateTransactionPayloads
 	 	ctsSocketClient.start();
 		
-//		System.err.println("Started SocketServer and SocketClient");
+		logger.debug("Started SocketServer and SocketClient");
 		
 		while (true) {
 			//	CtsSocketServer fills marketCreateTenderQueue	from LME
@@ -177,18 +184,18 @@ class CtsBridge extends Thread {
 			
 			try {
 				marketCreateTender = marketCreateTenderQueue.take();	// blocking
-//				System.err.println("CtsBridge.run after marketCreateTenderQueue.take " + Thread.currentThread().getName());
+				logger.debug("CtsBridge.run after marketCreateTenderQueue.take " + Thread.currentThread().getName());
 			} catch (InterruptedException e1) {
-				System.err.println("Interrupted while waiting on marketCreateTenderQueue");
+				logger.debug("Interrupted while waiting on marketCreateTenderQueue");
 				e1.printStackTrace();
 			}
 			
 			// process the just-removed MarketCreateTenderPayload
 			if (marketCreateTender == null)	{
-				System.err.println("CtsBridge:run: removed MarketCreateTenderPayload is null");
+				logger.debug("CtsBridge:run: removed MarketCreateTenderPayload is null");
 				continue;
 			}	else	{
-//				System.err.println("CtsBridge.run: " + marketCreateTender.toString());
+				logger.debug("CtsBridge.run: " + marketCreateTender.toString());
 			}
 			
 			//	Convert dtStart in marketCreateTender.bridgeInterval to instrument PackedLong
@@ -197,9 +204,9 @@ class CtsBridge extends Thread {
 			//	this is the default 60 minute duration
 			instrument = marketCreateTender.getBridgeInterval().toPackedLong();
 			
-//			System.err.println("CtsBridge.run() before bridgeExecute. instrument " +
-//					instrument + " Instrument Name " +
-//					marketCreateTender.getBridgeInterval().toInstrumentName());
+			logger.debug("CtsBridge.run() before bridgeExecute. instrument " +
+					instrument + " Instrument Name " +
+					marketCreateTender.getBridgeInterval().toInstrumentName());
 			
 			if ( marketCreateTender.getSide() == SideType.BUY)	{	//	buySide
 				 try	{
@@ -213,13 +220,13 @@ class CtsBridge extends Thread {
 					//	save Parity OrderID String and marketCreateTender in map for use in orderExecuted
 					mapReturnValue = idToCreateTenderMap.put(tempParityOrderId, marketCreateTender);
 					if (mapReturnValue != null)
-						System.err.println("CtsBridge.run.BuySide: Entry in map " +
-							mapReturnValue.toString() + " tempParityOrderId " + tempParityOrderId);
+						logger.debug("CtsBridge.run.BuySide: Entry in map " + mapReturnValue.toString() +
+							" tempParityOrderId " + tempParityOrderId);
 					
 					// DEBUG 
 //					printIdMap();
 				 } catch (IOException e) {
-					 System.out.println("error: CtsBridge: Connection closed");
+					 logger.debug("error: CtsBridge: Connection closed");
 				 }	
 			} else	{	// sellSide
 				try	{
@@ -233,14 +240,14 @@ class CtsBridge extends Thread {
 					//	save Parity OrderID String and marketCreateTender in map for use in orderExecuted
 					mapReturnValue = idToCreateTenderMap.put(tempParityOrderId, marketCreateTender);
 					if (mapReturnValue != null)
-						System.err.println("CtsBridge.run.SellSide: Return from put in map " +
+						logger.debug("CtsBridge.run.SellSide: Return from put in map " +
 							mapReturnValue.toString());
 					
 					// DEBUG 
 //					printIdMap();
 
 				} catch (IOException e) {
-					 System.out.println("error: CtsBridge: Connection closed"); 
+					 logger.debug("error: CtsBridge: Connection closed");
 				}
 					
 			// iterate
@@ -267,28 +274,26 @@ class CtsBridge extends Thread {
 	
 	static void orderAccepted(POE.OrderAccepted message, String parityOrderId)	{
 		// process the orderAccepted POE message
-
-		System.err.println("CtsBridge.orderAccepted " + parityOrderId);
+		logger.debug("CtsBridge.orderAccepted " + parityOrderId);
 		
 		//	TODO message back to CTS
 	}
 	
 	static void orderCanceled(POE.OrderCanceled message, String parityOrderId)	{
 		// process the orderCanceled POE message
-		byte reason;
 		String reasonString = null;
-		reason = message.reason;
 
-		switch(reason)	{
+		switch(message.reason)	{
 		case 'R':	reasonString = "Request";
 					break;
 		case 'S':	reasonString = "Supervisory";
 					break;
 		}
-		System.err.println("CtsBridge.orderCanceled " + parityOrderId +
-				" Reason " + reasonString + " Canceled Quantity " +
-				message.canceledQuantity);
-		
+
+		logger.info("CtsBridge.orderCanceled " + parityOrderId +
+				" Canceled Quantity " + message.canceledQuantity +
+				" Reason " + reasonString);
+
 		//	TODO message back to CTS
 	}
 
@@ -307,7 +312,7 @@ class CtsBridge extends Thread {
 		case 'Q':	reasonString = "Invalid Quantity";
 					break;
 		}
-		System.err.println("CtsBridge.orderRejected " + parityOrderId +
+		logger.info("CtsBridge.orderRejected " + parityOrderId +
 				" Reason " + reasonString);
 		
 		//	TODO message back to CTS
@@ -327,14 +332,16 @@ class CtsBridge extends Thread {
 		MarketCreateTransactionPayload marketCreateTransaction = null;		
 		//	Get original MarketCreateTenderPayload which has Side
 		originalCreateTender = idToCreateTenderMap.get(parityOrderId);
-//		System.err.println("CtsBridge.orderExecuted: " + parityOrderId + " " + Thread.currentThread().getName());
+
+		logger.debug("CtsBridge.orderExecuted: " + parityOrderId +
+				" " + Thread.currentThread().getName());
 		
 		// Only CTS tenders will have an ID map entry. Process, or print and return.
 		if (originalCreateTender == null) {
-			System.err.println("CtsBridge.orderExecuted: parityOrderId "  + 
+			logger.debug("CtsBridge.orderExecuted: parityOrderId "  + 
 					parityOrderId + " originalCreateTender is null.");
 			}	else	{ 	// has a valid map entry
-				System.err.println("CtsBridge.orderExecuted " +  parityOrderId +
+				logger.debug("CtsBridge.orderExecuted " +  parityOrderId +
 					" original CreateTender CtsTenderId " + originalCreateTender.getCtsTenderId());
 				
 				marketCreateTransaction = new MarketCreateTransactionPayload(
@@ -349,9 +356,10 @@ class CtsBridge extends Thread {
 				//	to send to LME
 				try {
 					createTransactionQueue.put(marketCreateTransaction);
-//					System.err.println("CtsBridge.orderExecuted: createTransactionQueue.put size now " + createTransactionQueue.size());
+					
+					logger.debug("CtsBridge.orderExecuted: createTransactionQueue.put size now " + createTransactionQueue.size());
 				} catch (InterruptedException e) {
-					System.err.println("CtsBridge.orderExecuted: createTransactionQueue.put interrupted");
+					logger.debug("CtsBridge.orderExecuted: createTransactionQueue.put interrupted");
 					e.printStackTrace();
 				}
 			}

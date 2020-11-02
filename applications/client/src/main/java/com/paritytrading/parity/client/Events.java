@@ -36,6 +36,10 @@ import com.paritytrading.parity.net.poe.POEClientListener;
 import java.util.ArrayList;
 import java.util.List;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 /*
  *	WTC
  *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
@@ -53,6 +57,10 @@ import java.util.List;
  *      public final String orderId;
  */
 class Events implements POEClientListener {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(Events.class);
 
 	private final List<Event> events;
 
@@ -97,8 +105,9 @@ class Events implements POEClientListener {
 	public void orderExecuted(POE.OrderExecuted message) {
 		String parityOrderId = new String(message.orderId);
 		
-//		System.err.println("Events.orderExecuted " + Thread.currentThread().getName() +
-//			" parityOrderId " + parityOrderId);
+		logger.debug("Events.orderExecuted " + Thread.currentThread().getName() +
+			" parityOrderId " + parityOrderId);
+
 		// Call to CtsBridge for processing
 		CtsBridge.orderExecuted(message, parityOrderId);
 		
@@ -109,9 +118,13 @@ class Events implements POEClientListener {
 	public void orderCanceled(POE.OrderCanceled message) {
 		String parityOrderId = new String(message.orderId);
 
-		// HOOK - Insert call to CtsBridge as needed
-		System.out.println("Events.orderCanceled " + parityOrderId +
-				" Reason " + message.reason);
+		logger.debug("Events.orderCanceled " + parityOrderId +
+				" CanceledQuantity " + message.canceledQuantity +
+				 " Reason " + (char)message.reason);
+
+		// Call to CtsBridge for processing
+		CtsBridge.orderCanceled(message, parityOrderId);
+
 		add(new Event.OrderCanceled(message));
 	}
 
