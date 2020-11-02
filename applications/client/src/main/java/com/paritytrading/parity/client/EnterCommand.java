@@ -41,7 +41,15 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.io.UnsupportedEncodingException;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 class EnterCommand implements Command {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(EnterCommand.class);
 
     private final POE.EnterOrder message;
     
@@ -119,7 +127,9 @@ class EnterCommand implements Command {
         // WTC hook - one level call based on flag
         if (hookExecuteFlag)	{
         	hookExecuteFlag = false;
-        	System.err.println("before hookExecute call quantity " + quantity + 
+        	// System.err.println("before hookExecute call quantity " + quantity + 
+            // 		" instrument long " + instrument + " price " + price);
+            logger.debug("before hookExecute call quantity " + quantity + 
         			" instrument long " + instrument + " price " + price);
         	hookExecute(client, quantity, instrument, price);
         }
@@ -134,8 +144,10 @@ class EnterCommand implements Command {
      */
     void hookExecute(TerminalClient client, long quantity, long instrument,
     		long price) throws IOException	{
-    	// create a tender quantity 19 instrument AAPL price 123
-      	System.err.println("inside hookExecute quantity " + quantity +
+    // create a tender quantity 19 instrument AAPL price 123
+      	// System.err.println("inside hookExecute quantity " + quantity +
+        //           " instrument long " + instrument + " price " + price);
+        logger.debug("inside hookExecute quantity " + quantity +
       			" instrument long " + instrument + " price " + price);
     	execute(client, 19, instrument, 123*100);
     }
@@ -191,7 +203,8 @@ class EnterCommand implements Command {
     	try	{
     		sideString = new String(sideByte, "UTF-8");
     	} catch	(UnsupportedEncodingException e)	{
-    		System.err.println("Unsupported EncodingException in getSide");
+            // System.err.println("Unsupported EncodingException in getSide");
+    		logger.debug("Unsupported EncodingException in getSide");
     	}
     	
     	return sideString;

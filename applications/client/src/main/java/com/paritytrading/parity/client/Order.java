@@ -22,7 +22,15 @@ import com.paritytrading.parity.util.Instrument;
 import com.paritytrading.parity.util.Instruments;
 import com.paritytrading.parity.util.Timestamps;
 
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 class Order {
+	
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(Order.class);
 
     private final long   timestamp;
     private final String orderId;
@@ -72,6 +80,7 @@ class Order {
         Instrument config = instruments.get(instrument);
         
 //        System.err.println("Order.format config=" + (config == null ? null : "non-null"));
+          logger.debug("Order.format config=" + (config == null ? null : "non-null"));
 
         String priceFormat = config.getPriceFormat();
         String sizeFormat  = config.getSizeFormat();

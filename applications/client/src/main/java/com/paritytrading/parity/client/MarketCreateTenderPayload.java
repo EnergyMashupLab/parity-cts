@@ -17,6 +17,9 @@
 package com.paritytrading.parity.client;
 
 import java.time.Instant;
+// Import log4j classes.
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /*
  * Sent by the LME to the Market with information to be
@@ -29,6 +32,11 @@ import java.time.Instant;
  */
 
 public class MarketCreateTenderPayload {	
+
+	// Define a static logger variable so that it references the
+    // Logger instance named "MyApp".
+    private static final Logger logger = LogManager.getLogger(MarketCreateTenderPayload.class);
+	
 	private String info = "MarketCreateTenderPayload";
 	private SideType side;
 	private long quantity;
@@ -71,6 +79,11 @@ public class MarketCreateTenderPayload {
 //				this.getBridgeInterval().toInstrumentName() + "' " + 
 //				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval "
 //				);
+		logger.debug(
+				"MarketCreateTenderPayload.toString interval to instrument '" +
+				this.getBridgeInterval().toInstrumentName() + "' " + 
+				" " + this.getBridgeInterval().asInterval().toString() + "' as cts interval "
+				);
 		
 		return (info + " side " + tempString + " quantity " +
 				quantity + " price " + price +
