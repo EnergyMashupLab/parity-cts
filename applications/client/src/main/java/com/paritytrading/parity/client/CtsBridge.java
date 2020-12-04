@@ -73,13 +73,27 @@ class CtsBridge extends Thread {
 	 */
 	public final static int LME_PORT = 39401;		// Socket Server in LME takes CreateTransaction
 	public final static int MARKET_PORT = 39402;	// Socket Server in Market takes CreateTender 
-	
-	
+	public static String ctsIpAddress = null;				// Ip address to send transactions to CTS
+	/*
+	 * Three argument constructor
+	 */
 	public CtsBridge(TerminalClient client, Events events, Instruments instruments)	{
 		// store information needed to call EnterCommand.bridgeExecute() to enter orders
 		this.events = events;
 		CtsBridge.client = client;
 		CtsBridge.instruments = instruments;
+	}
+	
+	/*
+	 *	Four argument constructor - adds ctsIp for networking back to eml-cts
+	 *	to pass to CtsSocketClient constructor
+	 */
+	public CtsBridge(TerminalClient client, Events events, Instruments instruments, String ctsIp)	{
+		// store information needed to call EnterCommand.bridgeExecute() to enter orders
+		this.events = events;
+		CtsBridge.client = client;
+		CtsBridge.instruments = instruments;
+		this.ctsIpAddress = ctsIp;
 	}
 
 	// set by TerminalClient call to this.setSide()
@@ -173,7 +187,9 @@ class CtsBridge extends Thread {
 			logger.debug("CtsBridge thread was interrupted before socket client start.");
 		}
 
-		ctsSocketClient = new CtsSocketClient(LME_PORT, this);	// thread sends MarketCreateTransactionPayloads
+		// thread sends MarketCreateTransactionPayloads
+		//	Update will take IP address from the command line and pass to three-argument constructor
+		ctsSocketClient = new CtsSocketClient(ctsIpAddress, LME_PORT, this);	
 	 	ctsSocketClient.start();
 		
 		logger.debug("Started SocketServer and SocketClient");

@@ -88,6 +88,7 @@ class TerminalClient implements Closeable {
     private final Instruments instruments;
     private final OrderIDGenerator orderIdGenerator;
     private boolean closed;
+    static String ctsIp = null;
 
     private TerminalClient(Events events, OrderEntry orderEntry,
     		Instruments instruments) {
@@ -127,7 +128,11 @@ class TerminalClient implements Closeable {
          * 
          * Extract the buy and sell side EnterCommand objects and set their ref in ctsBridge
          */      
-         ctsBridge = new CtsBridge(terminalClient, events, instruments);
+        //	earlier version of CtsBridge Constructor - for docker have added ctsIp string 
+        //	set in main and used here
+        //	ctsBridge = new CtsBridge(terminalClient, events, instruments);
+         
+         ctsBridge = new CtsBridge(terminalClient, events, instruments, ctsIp);
          
          // tell the buy and sell EnterCommand instances about CtsBridging
          buy = (EnterCommand) COMMANDS[0];
@@ -287,12 +292,31 @@ class TerminalClient implements Closeable {
         return scanner;
     }
 
+	/*
+	 * Original main, replaced to take string IP address for eml-cts as first (0th) arg
+	 * and pass args[1]
+	 */
+//    public static void main(String[] args) throws IOException {
+//        if (args.length != 1)
+//            usage("parity-client <configuration-file>");
+//        
+//        try {
+//            main(config(args[0]));
+//        } catch (EndOfFileException | UserInterruptException e) {
+//            // Ignore.
+//        } catch (ConfigException | FileNotFoundException e) {
+//            error(e);
+//        }
+//    }
+    
     public static void main(String[] args) throws IOException {
-        if (args.length != 1)
-            usage("parity-client <configuration-file>");
+        if (args.length != 2)
+            usage("parity-client <eml-cts IP address> <configuration-file>");
+        ctsIp = args[0];
+        
         
         try {
-            main(config(args[0]));
+            main(config(args[1]));
         } catch (EndOfFileException | UserInterruptException e) {
             // Ignore.
         } catch (ConfigException | FileNotFoundException e) {

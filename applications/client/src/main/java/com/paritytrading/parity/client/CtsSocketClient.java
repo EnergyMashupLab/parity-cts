@@ -59,7 +59,20 @@ public class CtsSocketClient	extends Thread {
 	public static final int LME_PORT = 39401;
 	
 	private static int port = LME_PORT;	// CreateTransaction from Market to LME
+	
+	// Address for LME
+	// Default is localhost 127.0.0.1
+	//	NOTE requires configuration on eml-cts end so database connection works
+	// wtc home office private static String ip = "192.168.1.81";	// address for LME
+	//	private static String ip = "192.168.1.81";	// address for LME
+	/*
+	 * TODO update to command line argument, pass as parameter to CtsSocetClient constructor
+	 */
+	//	private static String ip = "127.0.0.1";
+	
+	// docker setup will change this from the constructore
 	private static String ip = "127.0.0.1";	
+
 	CtsBridge bridge;	// to access bridge.createTransactionQueue
 	
 	public CtsSocketClient()	{
@@ -69,11 +82,34 @@ public class CtsSocketClient	extends Thread {
     			port + " ip " + ip + " " + Thread.currentThread().getName());
 	}
 	
-    public CtsSocketClient(int port, CtsBridge bridge)	{
+    /*
+     * 	Two argument constructor - Port and bridge for callbacks
+     *	to delete when IP address from command line complete
+     */
+	public CtsSocketClient(int port, CtsBridge bridge)	{
 //    	System.err.println("CtsSocketClient: constructor 2 parameters bridge port " +
 //    			port + " ip " + ip + " " + Thread.currentThread().getName());
 		logger.debug("CtsSocketClient: constructor 2 parameters bridge port " +
    				port + " ip " + ip + " " + Thread.currentThread().getName());
+    	this.bridge = bridge;
+    	CtsSocketClient.port = port;
+    	if (bridge == null)	{
+			// System.err.println("CtsSocketClient: constructor:this.bridge is null");
+			logger.debug("CtsSocketClient: constructor:this.bridge is null");
+    	}
+    }
+    
+    /*
+     * 	Three argument constructor - IP address, Port, and bridge for callbacks
+     */
+	
+	// ctsSocketClient = new CtsSocketClient(ctsIpAddress, LME_PORT, this);
+	
+    public CtsSocketClient(String ipCommandLine, int port, CtsBridge bridge)	{
+    	this.ip = ipCommandLine;
+    	
+		logger.info("CtsSocketClient: constructor 3 parameters bridge. IP '" + ip +
+		"' port " + port + " " + Thread.currentThread().getName());
     	this.bridge = bridge;
     	CtsSocketClient.port = port;
     	if (bridge == null)	{
