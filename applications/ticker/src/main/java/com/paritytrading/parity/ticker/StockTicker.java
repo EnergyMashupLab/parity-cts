@@ -36,12 +36,13 @@ import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import org.jvirtanen.config.Configs;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+// Commented out attempt to use Log4j2 - issues with Maven Shade plugin
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 class StockTicker {
 	
-	private static final Logger logger = LogManager.getLogger(StockTicker.class);
+//	private static final Logger logger = LogManager.getLogger(StockTicker.class);
 
     public static void main(String[] args) {
         if (args.length < 1)
@@ -124,7 +125,7 @@ class StockTicker {
 
     private static void usage() {
         // System.err.println("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
-        logger.debug("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
+//        logger.debug("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
         System.exit(2);
     }
 
