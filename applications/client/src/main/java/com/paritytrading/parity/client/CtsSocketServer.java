@@ -17,12 +17,18 @@
 package com.paritytrading.parity.client;
 
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.io.*;
 import java.lang.Thread;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paritytrading.parity.sbe.SBEEncoderDecoder_Parity;
+
+import baseline.*;
+
+import org.agrona.concurrent.UnsafeBuffer;
 
 //import java.util.HashMap;
 //import java.util.Map;
@@ -55,8 +61,9 @@ public class CtsSocketServer extends Thread	{
     private Socket clientSocket;
     private PrintWriter out;
 //	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
-    private BufferedReader in;
+    private BufferedInputStream bis;
     private CyclicBarrier clientSocketBarrier;
+    
     
     // Socket Server in LME for CreateTransaction
     public static final int LME_PORT = 39401;
@@ -67,10 +74,13 @@ public class CtsSocketServer extends Thread	{
     
     final ObjectMapper mapper = new ObjectMapper();
     CtsBridge bridge;	// to access bridge.marketCreateTenderQueue
+    
+    final MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
+    final  MarketCreateTenderPayloadDecoder marketCreateTenderPayloadDecoder = new MarketCreateTenderPayloadDecoder();
 
     @Override
     public void run() {
-        String jsonReceived = null;
+       // String jsonReceived = null;
         MarketCreateTenderPayload payload;
         
     	//	port is set in constructor or by initializer
@@ -81,6 +91,8 @@ public class CtsSocketServer extends Thread	{
    	
         try {
             serverSocket = new ServerSocket(port);
+            
+            while(true) {
             clientSocket = serverSocket.accept();
             try {
                 clientSocketBarrier.await();
@@ -93,9 +105,8 @@ public class CtsSocketServer extends Thread	{
                 // System.err.println("CtsSocketServer: clientSocket null after accept");
                 logger.debug("CtsSocketServer: clientSocket null after accept");
             out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(
-            		new InputStreamReader(clientSocket.getInputStream()));
-            if (in == null || out == null)	{
+            //in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            if (bis == null || out == null)	{
                 // System.err.println("in or out null");
                 logger.debug("in or out null");
             }
@@ -105,29 +116,55 @@ public class CtsSocketServer extends Thread	{
                 
             // System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
                logger.debug("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
-            	jsonReceived = in.readLine();     
+            	//jsonReceived = in.readLine();     
 //            	System.err.println("CtsSocketServer.run: after in.readLine jsonReceived is '" + 
 //            		jsonReceived  + "' Thread " + Thread.currentThread().getName());
-                logger.debug("CtsSocketServer.run: after in.readLine jsonReceived is '" + 
-           		    jsonReceived  + "' Thread " + Thread.currentThread().getName());
+              //  logger.debug("CtsSocketServer.run: after in.readLine jsonReceived is '" + jsonReceived  + "' Thread " + Thread.currentThread().getName());
                 
-                if (jsonReceived == null)	break;
-                payload = mapper.readValue(
-                		jsonReceived, MarketCreateTenderPayload.class);
+                //if (jsonReceived == null)	break;
+                //payload = mapper.readValue(jsonReceived, MarketCreateTenderPayload.class);
+                
+               	bis = new BufferedInputStream(clientSocket.getInputStream());
+   				ByteBuffer bbf = ByteBuffer.allocate(4096);
+   				UnsafeBuffer buffer = new UnsafeBuffer(bbf);
+   				
+   				
+   				int bufferOffset_lengthToRead = messageHeaderDecoder.encodedLength();
+   				
+   				readData(bis, buffer, 0, bufferOffset_lengthToRead);
+   				
+   				messageHeaderDecoder.wrap(buffer, 0);
+   				
+   				//We have got the id, Now based on ID we will use correct decoder
+				int templateId = messageHeaderDecoder.templateId();
+				
+				//Length encoded message
+				int actingBlockLength = messageHeaderDecoder.blockLength();
+				
+
+				//Length encoded message
+				int actingVersion = messageHeaderDecoder.version();
+				
+				int block_lengthToRead = actingBlockLength;
+				readData(bis, buffer, 0, block_lengthToRead);
+                
+   				SBEEncoderDecoder_Parity.decode(marketCreateTenderPayloadDecoder, buffer, bufferOffset_lengthToRead, actingBlockLength, actingVersion);
+   				
+               
                                 
 //            	System.err.println("CtsSocketServer.run received and put on marketCreateTenderQueue " +
 //              		payload.toString());
-                logger.debug("CtsSocketServer.run received and put on marketCreateTenderQueue " +
-             		payload.toString());
+              //  logger.debug("CtsSocketServer.run received and put on marketCreateTenderQueue " +payload.toString());
 //                
                 // Put on bridge.marketCreateTenderQueue for processing by CtsBridge
-            	bridge.marketCreateTenderQueue.put(payload);
+            	//bridge.marketCreateTenderQueue.put(payload);
             	
 //              System.err.println("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
 //             			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());
                 logger.debug("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
              			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());
-    		}            
+    		}  
+            }
         } catch (IOException  e) {       	
             //	LOG.debug(e.getMessage());
             // System.err.println("CtsSocketServer: IOException in readLine?");
@@ -136,12 +173,35 @@ public class CtsSocketServer extends Thread	{
         } catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
     }
 
+    public void readData(BufferedInputStream bis, UnsafeBuffer buffer, int offset, int length) throws IOException
+	{
+		int lengthToRead = length;
+		//int totalReadBytes = 0;
+		
+		/*while(lengthToRead > 0)
+		{
+			
+			int readBytes = bis.read(buffer.byteArray(), offset + totalReadBytes, lengthToRead);
+			totalReadBytes +=readBytes;
+			lengthToRead -=readBytes;
+		}*/
+		
+		//int bytesRead = 0;
+		while(lengthToRead > 0) {
+			int readBytes = bis.read(buffer.byteArray(), offset , lengthToRead);
+			lengthToRead -=readBytes;
+		}
+	}
+    
     public void shutdown() {
         try {
-            in.close();
+            bis.close();
             out.close();
             clientSocket.close();
             serverSocket.close();
