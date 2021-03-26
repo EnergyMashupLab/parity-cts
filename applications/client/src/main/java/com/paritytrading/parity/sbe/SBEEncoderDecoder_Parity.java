@@ -2,40 +2,29 @@ package com.paritytrading.parity.sbe;
 
 import org.agrona.concurrent.UnsafeBuffer;
 
+import com.paritytrading.parity.client.MarketCreateTransactionPayload;
+
 import baseline.*;
 
 
 public class SBEEncoderDecoder_Parity {
-   
-   // private static final MessageHeaderDecoder MESSAGE_HEADER_DECODER = new MessageHeaderDecoder();
-    //private static final MessageHeaderEncoder messageHeaderEncoder = new MessageHeaderEncoder();
-    //private static final  MarketCreatedTenderPayloadDecoder Market_Created_Tender_Payload_Decoder = new MarketCreatedTenderPayloadDecoder();
-    //private static final MarketCreatedTenderPayloadEncoder Market_Created_Tender_Payload_ENCODER = new MarketCreatedTenderPayloadEncoder();
-    //private static final  MarketCreateTenderPayloadDecoder Market_Create_Tender_Payload_Decoder = new MarketCreateTenderPayloadDecoder();
-    //private static final MarketCreateTenderPayloadEncoder marketCreateTenderPayloadEncoder = new MarketCreateTenderPayloadEncoder();
-
-   
-    public static int encode(
-            final MarketCreateTenderPayloadEncoder marketCreateTenderPayloadEncoder, final UnsafeBuffer directBuffer, final MessageHeaderEncoder messageHeaderEncoder)
+      
+  public static int encode(
+            final MarketCreateTransactionPayloadEncoder marketCreateTransactionPayloadEncoder, final UnsafeBuffer directBuffer, final MessageHeaderEncoder messageHeaderEncoder, MarketCreateTransactionPayload marketcreateTransactionPayload)
     {
-        marketCreateTenderPayloadEncoder.wrapAndApplyHeader(directBuffer, 0, messageHeaderEncoder)
-                .quantity(99)
-                .price(50)
-                .ctsTenderId(111)
-                .side(SideType.S);
-        marketCreateTenderPayloadEncoder.expireTime()
-                .length(5)
-                .varDataMaxValue();
-        marketCreateTenderPayloadEncoder.bridgeInterval()
-                .durationInMinutes(30)
-                .length(5)
-                .varDataMaxValue();
-        return messageHeaderEncoder.ENCODED_LENGTH + marketCreateTenderPayloadEncoder.encodedLength();
+    	marketCreateTransactionPayloadEncoder.wrapAndApplyHeader(directBuffer, 0, messageHeaderEncoder)
+                .quantity(marketcreateTransactionPayload.getQuantity())
+                .price(marketcreateTransactionPayload.getPrice())
+                .ctsTenderId(marketcreateTransactionPayload.getCtsTenderId())
+                .side(SideType.S)
+                //.parityOrderId(marketcreateTransactionPayload.getParityOrderId())
+                .matchNumber(marketcreateTransactionPayload.getMatchNumber());
+    	
+        return messageHeaderEncoder.ENCODED_LENGTH + marketCreateTransactionPayloadEncoder.encodedLength();
 
     }
 
     public static void decode(final MarketCreateTenderPayloadDecoder marketCreateTenderPayloadDecoder, final UnsafeBuffer directBuffer, final int bufferOffset, final int actingBlockLength, final int actingVersion) throws Exception{
-        //final byte[] buffer = new byte[128];
         final StringBuilder sb = new StringBuilder();
         marketCreateTenderPayloadDecoder.wrap(directBuffer, 0, actingBlockLength, actingVersion);
         sb.append("\nmarketCreateTenderPayload.info=").append(marketCreateTenderPayloadDecoder.info());

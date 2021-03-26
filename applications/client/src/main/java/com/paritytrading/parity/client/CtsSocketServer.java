@@ -82,7 +82,8 @@ public class CtsSocketServer extends Thread	{
     public void run() {
        // String jsonReceived = null;
         MarketCreateTenderPayload payload;
-        
+        ByteBuffer bbf = ByteBuffer.allocate(4096);
+		UnsafeBuffer buffer = new UnsafeBuffer(bbf);
     	//	port is set in constructor or by initializer
 //     		System.err.println("CtsSocketServer.run() port: " + port +
 //    		" '" + Thread.currentThread().getName() + "'");
@@ -105,6 +106,7 @@ public class CtsSocketServer extends Thread	{
                 // System.err.println("CtsSocketServer: clientSocket null after accept");
                 logger.debug("CtsSocketServer: clientSocket null after accept");
             out = new PrintWriter(clientSocket.getOutputStream(), true);
+            bis = new BufferedInputStream(clientSocket.getInputStream());
             //in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             if (bis == null || out == null)	{
                 // System.err.println("in or out null");
@@ -124,10 +126,6 @@ public class CtsSocketServer extends Thread	{
                 //if (jsonReceived == null)	break;
                 //payload = mapper.readValue(jsonReceived, MarketCreateTenderPayload.class);
                 
-               	bis = new BufferedInputStream(clientSocket.getInputStream());
-   				ByteBuffer bbf = ByteBuffer.allocate(4096);
-   				UnsafeBuffer buffer = new UnsafeBuffer(bbf);
-   				
    				
    				int bufferOffset_lengthToRead = messageHeaderDecoder.encodedLength();
    				

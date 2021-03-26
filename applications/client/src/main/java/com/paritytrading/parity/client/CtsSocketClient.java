@@ -16,17 +16,22 @@
 
 package com.paritytrading.parity.client;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paritytrading.parity.sbe.SBEEncoderDecoder_Parity;
 
+import baseline.*;
 
+import org.agrona.concurrent.UnsafeBuffer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,8 +57,9 @@ public class CtsSocketClient	extends Thread {
 	final ObjectMapper mapper = new ObjectMapper();
 
 	private Socket clientSocket;
-	private PrintWriter out;
+	//private PrintWriter out;
 	private BufferedReader in;
+	BufferedOutputStream bos;
 	
 	public static final int MARKET_PORT = 39402;
 	public static final int LME_PORT = 39401;
@@ -61,6 +67,9 @@ public class CtsSocketClient	extends Thread {
 	private static int port = LME_PORT;	// CreateTransaction from Market to LME
 	private static String ip = "127.0.0.1";	
 	CtsBridge bridge;	// to access bridge.createTransactionQueue
+	
+	private static final MarketCreateTransactionPayloadEncoder marketCreateTransactionPayloadEncoder = new MarketCreateTransactionPayloadEncoder();
+	private static final MessageHeaderEncoder messageHeaderEncoder = new MessageHeaderEncoder();
 	
 	public CtsSocketClient()	{
     	// System.err.println("CtsSocketClient: constructor no args. port " +
@@ -86,6 +95,8 @@ public class CtsSocketClient	extends Thread {
 	public void run() {
 		MarketCreateTransactionPayload createTransaction;
 		String jsonString = null;	// for JSON string
+		ByteBuffer bbf = ByteBuffer.allocate(4096);
+		UnsafeBuffer buffer = new UnsafeBuffer(bbf);
 		
 // 		System.err.println("CtsSocketClient.run() port: " + port +
 // 				" ip " + ip + " " + Thread.currentThread().getName());
@@ -105,7 +116,8 @@ public class CtsSocketClient	extends Thread {
  		
  		try {
 			clientSocket = new Socket(ip, port);
-			out = new PrintWriter(clientSocket.getOutputStream(), true);
+			//out = new PrintWriter(clientSocket.getOutputStream(), true);
+			bos = new BufferedOutputStream(clientSocket.getOutputStream());
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		} catch (UnknownHostException e) {
 			// System.err.println("CtsSocketClient.run UnknownHost");
@@ -147,7 +159,14 @@ public class CtsSocketClient	extends Thread {
              		bridge.createTransactionQueue.size() + " " +
              		Thread.currentThread().getName());
 			
-              	jsonString = mapper.writeValueAsString(createTransaction);
+              	//jsonString = mapper.writeValueAsString(createTransaction);
+				
+				
+				int encodingLengthPlusHeader = SBEEncoderDecoder_Parity.encode(marketCreateTransactionPayloadEncoder, buffer, messageHeaderEncoder, createTransaction);
+				
+				bos.write(buffer.byteArray(), 0, encodingLengthPlusHeader);
+				
+				bos.flush();
 
               	if (jsonString == null)	{
 					  // System.err.println("CtsSocketClient.run loop: jsonString null - continue");
@@ -164,19 +183,19 @@ public class CtsSocketClient	extends Thread {
 //				System.err.println("clientSocket non-null");
 				logger.debug("clientSocket non-null");
 				
-				if (out == null)	{
+				if (bos == null)	{
 					// System.err.println("out is null - continue");
 					logger.debug("out is null - continue");
 					continue;
 				}	
 //				System.err.println("out is " + out.toString());
-				logger.debug("out is " + out.toString());
+				logger.debug("out is " + bos.toString());
 //          	System.err.println(
 //          		"CtsSocketClient.run jsonString to send to Lme " + jsonString);
 				logger.debug(
          		"CtsSocketClient.run jsonString to send to Lme " + jsonString);
 
-          		out.println(jsonString);
+          		//out.println(jsonString);
           		    		
 //              System.err.println("CtsSocketClient.run Json string written to Lme " + jsonString);
 				logger.debug("CtsSocketClient.run Json string written to Lme " + jsonString);
@@ -193,14 +212,18 @@ public class CtsSocketClient	extends Thread {
 				// System.err.println("NullPointerException: CtsSocketClient loop " + e3);
 				logger.debug("NullPointerException: CtsSocketClient loop " + e3);
 				e3.printStackTrace();
+			}   catch (Exception e4)	{
+				// System.err.println("NullPointerException: CtsSocketClient loop " + e3);
+				logger.debug("NullPointerException: CtsSocketClient loop " + e4);
+				e4.printStackTrace();
 			}
 		  }  
 	}
 
 	public void stopConnection() {	// not used TODO update for shutdown
 		  try {
-			in.close();
-			out.close();
+			//in.close();
+			//out.close();
 			clientSocket.close();
 	  } catch (IOException e) {
 		//   System.err.println("CtsSocketClient.stopConnection " + e);
