@@ -168,11 +168,11 @@ public class CtsSocketClient	extends Thread {
 				
 				bos.flush();
 
-              	if (jsonString == null)	{
+              	//if (jsonString == null)	{
 					  // System.err.println("CtsSocketClient.run loop: jsonString null - continue");
-					  logger.debug("CtsSocketClient.run loop: jsonString null - continue");
-              		continue;
-              	}	
+				//	  logger.debug("CtsSocketClient.run loop: jsonString null - continue");
+              	//	continue;
+              	//}	
           		if (clientSocket == null) {
               		// System.err.println(
 					  // 		"CtsSocketClient.run loop: clientSocket is null - continue");
@@ -193,13 +193,13 @@ public class CtsSocketClient	extends Thread {
 //          	System.err.println(
 //          		"CtsSocketClient.run jsonString to send to Lme " + jsonString);
 				logger.debug(
-         		"CtsSocketClient.run jsonString to send to Lme " + jsonString);
+         		"CtsSocketClient.run encodingLengthPlusHeader to send to Lme " + encodingLengthPlusHeader);
 
           		//out.println(jsonString);
           		    		
 //              System.err.println("CtsSocketClient.run Json string written to Lme " + jsonString);
-				logger.debug("CtsSocketClient.run Json string written to Lme " + jsonString);
-		        logger.debug("after println of json " + jsonString);		
+				logger.debug("CtsSocketClient.run encodingLengthPlusHeader written to Lme " + encodingLengthPlusHeader);
+		        logger.debug("after println of encodingLengthPlusHeader " + encodingLengthPlusHeader);		
 			} catch (InterruptedException e1) {
 				// System.err.println("createTransactionQueue.take interrupted");
 				logger.debug("createTransactionQueue.take interrupted");

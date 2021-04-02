@@ -146,7 +146,7 @@ public class CtsSocketServer extends Thread	{
 				int block_lengthToRead = actingBlockLength;
 				readData(bis, buffer, 0, block_lengthToRead);
                 
-   				SBEEncoderDecoder_Parity.decode(marketCreateTenderPayloadDecoder, buffer, bufferOffset_lengthToRead, actingBlockLength, actingVersion);
+				payload = SBEEncoderDecoder_Parity.decode(marketCreateTenderPayloadDecoder, buffer, bufferOffset_lengthToRead, actingBlockLength, actingVersion);
    				
                
                                 
@@ -155,7 +155,7 @@ public class CtsSocketServer extends Thread	{
               //  logger.debug("CtsSocketServer.run received and put on marketCreateTenderQueue " +payload.toString());
 //                
                 // Put on bridge.marketCreateTenderQueue for processing by CtsBridge
-            	//bridge.marketCreateTenderQueue.put(payload);
+            	bridge.marketCreateTenderQueue.put(payload);
             	
 //              System.err.println("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
 //             			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());

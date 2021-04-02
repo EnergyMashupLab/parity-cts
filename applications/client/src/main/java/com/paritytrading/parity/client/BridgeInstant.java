@@ -32,7 +32,7 @@ public class BridgeInstant {
 	private static final DateTimeFormatter INSTANT_INSTRUMENT_FORMATTER =
 			DateTimeFormatter.ofPattern("MMddHHmm").withZone(ZoneId.of("Z"));
 
-	BridgeInstant() {
+	public BridgeInstant() {
 	}
 
 	BridgeInstant(Instant javaInstant) {

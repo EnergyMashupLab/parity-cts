@@ -59,7 +59,7 @@ public class BridgeInterval {
 	 * minutes, converted in the constructor
 	 */
 
-	BridgeInterval() {
+	public BridgeInterval() {
 		dtStart = new BridgeInstant(Instant.now()); // a reasonable default
 	}
 

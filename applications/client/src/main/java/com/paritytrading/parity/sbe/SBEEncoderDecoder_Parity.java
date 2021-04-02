@@ -2,6 +2,10 @@ package com.paritytrading.parity.sbe;
 
 import org.agrona.concurrent.UnsafeBuffer;
 
+import com.paritytrading.parity.client.BridgeInstant;
+import com.paritytrading.parity.client.BridgeInterval;
+import com.paritytrading.parity.client.CtsInterval;
+import com.paritytrading.parity.client.MarketCreateTenderPayload;
 import com.paritytrading.parity.client.MarketCreateTransactionPayload;
 
 import baseline.*;
@@ -27,7 +31,7 @@ public class SBEEncoderDecoder_Parity {
 
     }
 
-	public static void decode( MarketCreateTenderPayloadDecoder marketCreateTenderPayloadDecoder,
+	public static MarketCreateTenderPayload decode( MarketCreateTenderPayloadDecoder marketCreateTenderPayloadDecoder,
 			 UnsafeBuffer directBuffer,  int bufferOffset,  int actingBlockLength,
 			 int actingVersion) throws Exception {
 		
@@ -48,6 +52,36 @@ public class SBEEncoderDecoder_Parity {
 		sb.append("\nmarketCreateTenderPayload.bridgeInterval.varData=").append(bid.varDataMaxValue());
 
 		System.out.println(sb);
+		
+		MarketCreateTenderPayload marketCreateTenderPayload = new MarketCreateTenderPayload();
+		BridgeInstant bridgeInstant = new BridgeInstant();
+		BridgeInterval bridgeInterval = new BridgeInterval();
+		//CtsInterval CtsInterval = new CtsInterval();
+		
+		
+		marketCreateTenderPayload.setQuantity(marketCreateTenderPayloadDecoder.quantity());
+		marketCreateTenderPayload.setPrice(marketCreateTenderPayloadDecoder.price());
+		marketCreateTenderPayload.setCtsTenderId(marketCreateTenderPayloadDecoder.ctsTenderId());
+		
+		if(marketCreateTenderPayloadDecoder.side() == SideType.B) {
+			marketCreateTenderPayload.setSide(com.paritytrading.parity.client.SideType.BUY);
+		}else {
+			marketCreateTenderPayload.setSide(com.paritytrading.parity.client.SideType.SELL);
+		}
+		
+		
+		
+		//bridgeInstant.setInstantString("2007-06-20T00:00:30.00Z");
+		bridgeInstant.setInstantString("2021-06-20T16:00:00Z");
+		
+		bridgeInterval.setDurationInMinutes(bid.durationInMinutes());
+		bridgeInterval.setDtStart(bridgeInstant);
+		
+		marketCreateTenderPayload.setExpireTime(bridgeInstant);
+		marketCreateTenderPayload.setBridgeInterval(bridgeInterval);
+		
+		
+		return marketCreateTenderPayload;
 	}
 
 }
