@@ -27,7 +27,11 @@ public class SBEEncoderDecoder_Parity {
                 .matchNumber(marketcreateTransactionPayload.getMatchNumber())
                 .parityOrderId();
     	
+    	System.out.println("Encoded Message :-");
+    	System.out.println(marketCreateTransactionPayloadEncoder.toString());
+    	
         return messageHeaderEncoder.ENCODED_LENGTH + marketCreateTransactionPayloadEncoder.encodedLength();
+        
 
     }
 
@@ -51,6 +55,8 @@ public class SBEEncoderDecoder_Parity {
 		sb.append("\nmarketCreateTenderPayload.bridgeInterval.length=").append(bid.length());
 		sb.append("\nmarketCreateTenderPayload.bridgeInterval.varData=").append(bid.varDataMaxValue());
 
+		System.out.println("-------------------------------------------------------------------------");
+		System.out.println("Decoded Message:-");
 		System.out.println(sb);
 		
 		MarketCreateTenderPayload marketCreateTenderPayload = new MarketCreateTenderPayload();
