@@ -64,7 +64,7 @@ public class MarketCreateTenderPayload {
 	}
 	
 	// Default constructor for JSON
-	MarketCreateTenderPayload()	{
+	public MarketCreateTenderPayload()	{
 	}
 	
 	@Override
