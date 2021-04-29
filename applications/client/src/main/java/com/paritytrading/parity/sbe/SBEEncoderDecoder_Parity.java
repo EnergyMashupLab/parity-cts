@@ -26,7 +26,7 @@ public class SBEEncoderDecoder_Parity {
                 .side((sideT.name()=="BUY") ? SideType.B : SideType.S)
                 .matchNumber(marketcreateTransactionPayload.getMatchNumber())
                 .parityOrderId();
-    	
+    	System.out.println("");
     	System.out.println("MarketCreateTransactionPayload Encoded  :-");
     	System.out.println(marketCreateTransactionPayloadEncoder.toString());
     	
@@ -55,9 +55,10 @@ public class SBEEncoderDecoder_Parity {
 		sb.append("\nmarketCreateTenderPayload.bridgeInterval.length=").append(bid.length());
 		sb.append("\nmarketCreateTenderPayload.bridgeInterval.varData=").append(bid.varDataMaxValue());
 
+		System.out.println("");
 		System.out.println("-------------------------------------------------------------------------");
 		System.out.println("MarketCreateTenderPayload Decoded :-");
-		System.out.println(sb);
+		System.out.println(marketCreateTenderPayloadDecoder.toString());
 		
 		MarketCreateTenderPayload marketCreateTenderPayload = new MarketCreateTenderPayload();
 		BridgeInstant bridgeInstant = new BridgeInstant();
