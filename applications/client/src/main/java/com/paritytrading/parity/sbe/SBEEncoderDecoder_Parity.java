@@ -58,7 +58,7 @@ public class SBEEncoderDecoder_Parity {
 		System.out.println("");
 		System.out.println("-------------------------------------------------------------------------");
 		System.out.println("MarketCreateTenderPayload Decoded :-");
-		System.out.println(marketCreateTenderPayloadDecoder.toString());
+		System.out.println(sb);
 		
 		MarketCreateTenderPayload marketCreateTenderPayload = new MarketCreateTenderPayload();
 		BridgeInstant bridgeInstant = new BridgeInstant();
