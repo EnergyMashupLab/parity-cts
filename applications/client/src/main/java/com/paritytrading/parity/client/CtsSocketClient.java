@@ -30,11 +30,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/*
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
 
 /*
- * 	This socket client communicates with the LME for MarketCreateTransactionPayloads.
+ * CTS
+ *	This socket client communicates with the LME for MarketCreateTransactionPayloads.
  * 
- * 	The payloads are serialized in JSON. This CtsSocketClient opens localhost:LME_PORT
+ * The payloads are serialized in JSON. This CtsSocketClient opens localhost:LME_PORT
  * 
  *  Each orderExecuted message from the POE protocol engine generates one
  *  MarketCreateTransactionPayload on createTransactionQueue, which are sent one at a time

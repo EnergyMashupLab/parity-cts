@@ -23,10 +23,14 @@ class ExitCommand implements Command {
     public void execute(TerminalClient client, Scanner arguments) {
         if (arguments.hasNext())
             throw new IllegalArgumentException();
-        // Terminal all threads except main
+        /*
+			* CTS Terminate all threads except main.
+			* CtsSocketClient and CtsSockerServer are CTS threads
+			*/
         TerminalClient.ctsBridge.ctsSocketServer.interrupt();
+// CTS SocketClient already terminated?        TerminalClient.ctsBridge.ctsSocketClient.interrupt();
         // CtsSocketServer.sockServer.interrupt();
-        
+
         client.close();
     }
 

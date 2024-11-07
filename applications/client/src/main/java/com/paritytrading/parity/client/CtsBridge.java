@@ -32,32 +32,38 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /*
-* CtsBridge is used to transform and send and receive messages between the LME and the 
-* enhanced Parity Terminal Client, thus entering Parity orders and detecting Parity
-* order execution.
-* 
-* CtsBridge functions include
-* 
-*		Creating the appropriate parity and CTS messages
-* 
-* 		mapping from the Parity orderExecuted to build and
-* 		send MarketCreateTransaction with the correct information.
-* 
-* A MarketCreateTender message is received from the LME and turned into a 
-* Parity Order Entry with necessary mapping of tender/order IDs
-* 
-* All prices and quantities are of the minimum increment; the minimum increment
-* MUST be consistent across this enhanced Terminal Client. First implementation
-* will use minimum increment price of one-tenth of a cent, a factor of 1000, and
-* integers for quantity.
-*
-* Design note: This class is implemented with multiple threads including those in CtsBridge,
-* CtsSocketClient, and CtsSocketServer.
-* 
-* The CtsBridge and related codes hooks the Parity Client so the user can run parity-client.jar,
-* where the parity ticker, reporter, manual entry, and trades and orders all function as in
-* the unmodified Parity release.
-*/
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
+/*
+ * CTS
+ *
+ * CtsBridge is used to transform and send and receive messages between the LME and the 
+ * enhanced Parity Terminal Client, thus entering Parity orders and detecting Parity
+ * order execution.
+ * 
+ * CtsBridge functions include
+ * 
+ *		Creating the appropriate parity and CTS messages
+ * 
+ * 		mapping from the Parity orderExecuted to build and
+ * 		send MarketCreateTransaction with the correct information.
+ * 
+ * A MarketCreateTender message is received from the LME and turned into a 
+ * Parity Order Entry with necessary mapping of tender/order IDs
+ * 
+ * All prices and quantities are of the minimum increment; the minimum increment
+ * MUST be consistent across this CTS  enhanced Terminal Client. First implementation
+ * will use minimum increment price of one-tenth of a cent, a factor of 1000, and
+ * integers for quantity.
+ *
+ * Design note: This class is implemented with multiple threads including those in CtsBridge,
+ * CtsSocketClient, and CtsSocketServer.
+ * 
+ * The CtsBridge and related codes hooks the Parity Client so the user can run parity-client.jar,
+ * where the parity ticker, reporter, manual entry, and trades and orders all function as in
+ * the unmodified Parity release.
+ */
 
 
 // started in TerminalClient
@@ -90,6 +96,7 @@ class CtsBridge extends Thread {
 	static final Boolean DEBUG_JSON = false;
 
 	/*
+	 * CTS
 	 * CtsSocketServer receives tenders from the LME and puts on marketCreateTenderQueue
 	 * CtsSocketClient takes transactions from createTransactionQueue and sends to the LME
 	 * 

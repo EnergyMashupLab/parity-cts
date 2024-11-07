@@ -61,6 +61,11 @@ import org.jvirtanen.config.Configs;
 import com.paritytrading.parity.client.EnterCommand;
 import com.paritytrading.parity.client.CtsBridge;
 
+/*
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
+
 class TerminalClient implements Closeable {
 
     static final Command[] COMMANDS = new Command[] {
@@ -162,7 +167,7 @@ class TerminalClient implements Closeable {
     }
     
     /*
-     * WTC getters for Buy, Sell EnterCommand instances
+     * CTS getters for Buy, Sell EnterCommand instances
      * 
      * EnterCommand.bridgeExecute() allows order entry from
      * CtsBridge, returning String orderId
@@ -308,7 +313,7 @@ class TerminalClient implements Closeable {
 
         Instruments instruments = Instruments.fromConfig(config, "instruments");
         
-        // WTC log4j2 setup in working directory
+        // CTS log4j2 setup in working directory
         System.setProperty("log4j2.configurationFile","./log4j2.xml");
 
         // and open then run

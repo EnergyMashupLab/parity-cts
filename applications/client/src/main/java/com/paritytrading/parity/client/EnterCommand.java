@@ -45,6 +45,10 @@ import java.io.UnsupportedEncodingException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+/*
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
 class EnterCommand implements Command {
 	
 	// Define a static logger variable so that it references the
@@ -56,20 +60,22 @@ class EnterCommand implements Command {
     // place in buy/sell Commands	
     private CtsBridge ctsBridge; 
     
-    // WTC hookExecute is called only when hookExecuteFlag is true
+    // CTS hookExecute is called only when hookExecuteFlag is true
 	Boolean hookExecuteFlag = false; // if true executes hook first time per side
 
     /*
-     * WTC Constructor creates the POE (Parity Order Entry protocol) message
+     * CTS
+     * Constructor creates the POE (Parity Order Entry protocol) message
      * with Side from the constructor parameter
      */
+
     EnterCommand(byte side) {
         this.message = new POE.EnterOrder();
         this.message.side = side;
     }
 
     /*
-     * WTC Execute executes this command and parses the command line, sending
+     * CTS Execute executes this command and parses the command line, sending
      * the result to execute(Client, long, long, long) below.
      */
     
@@ -100,7 +106,7 @@ class EnterCommand implements Command {
     }
     
     /*
-     * WTC Chained from execute after parsing command line
+     * CTS Chained from execute after parsing command line
      */
     private void execute(TerminalClient client, long quantity, long instrument,
     		long price) throws IOException {
@@ -108,7 +114,7 @@ class EnterCommand implements Command {
     	String orderId = client.getOrderIdGenerator().next();
 
         /*
-         * WTC insert field values into the message
+         * CTS insert field values into the message
          * THIS MAY NOT BE THREAD SAFE
          */
         ASCII.putLeft(message.orderId, orderId);
@@ -117,14 +123,14 @@ class EnterCommand implements Command {
         message.price      = price;
         
         /*
-         * WTC This is the actual message send
+         * CTS This is the actual message send
          */
 
         client.getOrderEntry().send(message);
 
         printf("\nOrder ID\n----------------\n%s\n\n", orderId);
         
-        // WTC hook - one level call based on flag
+        // CTS hook - one level call based on flag
         if (hookExecuteFlag)	{
         	hookExecuteFlag = false;
         	// System.err.println("before hookExecute call quantity " + quantity + 
@@ -136,7 +142,7 @@ class EnterCommand implements Command {
     }
 
     /*
-     * WTC hookExecute is called from execute(client, long, long, long) for 
+     * CTS hookExecute is called from execute(client, long, long, long) for 
      * hooking into that function. This version creates a specific order with
      * the same side. 
      * 
@@ -161,7 +167,7 @@ class EnterCommand implements Command {
     }
 
     /*
-     * WTC For calls from CtsBridge to equivalent of EnterCommand private
+     * CTS For calls from CtsBridge to equivalent of EnterCommand private
      * execute. This version returns String form of orderId to allow mapping
      * to and from Parity orderIds.
      */
@@ -171,7 +177,7 @@ class EnterCommand implements Command {
     	String orderId = client.getOrderIdGenerator().next();
 
         /*
-         * WTC insert field values into the message
+         * CTS insert field values into the message
          * THIS MAY NOT BE THREADSAFE
          */
         ASCII.putLeft(message.orderId, orderId);
@@ -180,12 +186,12 @@ class EnterCommand implements Command {
         message.price      = price;
         
         /*
-         * WTC Actual message send
+         * CTS Actual message send
          */
         client.getOrderEntry().send(message);
 
         /*
-         *	WTC Return the orderId just sent as a String
+         *	CTS Return the orderId just sent as a String
          */
         return new String(message.orderId);
     }

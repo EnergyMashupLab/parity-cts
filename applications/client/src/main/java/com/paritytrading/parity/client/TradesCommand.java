@@ -21,10 +21,15 @@ import com.paritytrading.parity.util.Instruments;
 import com.paritytrading.parity.util.TableHeader;
 import java.util.Scanner;
 
+/*
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
+
 class TradesCommand implements Command {
 
 	/*
-	 * WTC execute command including command line scan then pull
+	 * CTS execute command including command line scan then pull
 	 * matches (client.getEvents) and print.
 	 * 
 	 * Possible that the TerminalClient tracks events - look for
@@ -32,7 +37,7 @@ class TradesCommand implements Command {
 	 */
 	
 	/*
-	 * WTC check Reporter for simpler Trade reporting
+	 * CTS check Reporter for simpler Trade reporting
 	 */
     @Override
     public void execute(TerminalClient client, Scanner arguments) {
@@ -54,13 +59,13 @@ class TradesCommand implements Command {
         header.add("Price",   priceWidth);
 
         /*
-         * WTC why are collect and printf in italic?
+         * CTS why are collect and printf in italic?
          */
         printf("\n");
         printf(header.format());
 
         /*
-         * WTC Trade listener seems to put events into Trades,
+         * CTS Trade listener seems to put events into Trades,
          * might be able to simply read those
          */
         for (Trade trade : Trades.collect(client.getEvents()))

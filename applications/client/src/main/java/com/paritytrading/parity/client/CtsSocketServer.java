@@ -33,6 +33,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /*
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
+/*
+ * CTS
  * Overview:
  * 		This CtsSocketServer accepts connections on MARKET_PORT. The
  * 		CTS LME Socket Client opens the LME IP address on MARKET_PORT.
@@ -54,7 +59,7 @@ public class CtsSocketServer extends Thread	{
     private ServerSocket serverSocket;
     private Socket clientSocket;
     private PrintWriter out;
-//	private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
+//	 private static final Logger logger = LogManager.getLogger(CtsSocketServer.class);
     private BufferedReader in;
     private CyclicBarrier clientSocketBarrier;
     
@@ -103,7 +108,7 @@ public class CtsSocketServer extends Thread	{
             while (true)	{
             	//	blocking read on BufferedReader of a JSON serialized ClientCreateTenderPayload 
                 
-            // System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
+            	// System.err.println("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
                logger.debug("CtsSocketServer.run before in.readLine " + Thread.currentThread().getName());
             	jsonReceived = in.readLine();     
 //            	System.err.println("CtsSocketServer.run: after in.readLine jsonReceived is '" + 
@@ -122,9 +127,12 @@ public class CtsSocketServer extends Thread	{
 //                
                 // Put on bridge.marketCreateTenderQueue for processing by CtsBridge
             	bridge.marketCreateTenderQueue.put(payload);
-            	
-//              System.err.println("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
-//             			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());
+            
+/*
+ * CTS use println rather than adjust global log level to Debug
+ */	
+               System.err.println("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
+             			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());
                 logger.debug("CtsSocketServer.run after marketCreateTenderQueue.put size " + 
              			bridge.marketCreateTenderQueue.size() + " " +Thread.currentThread().getName());
     		}            

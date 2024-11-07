@@ -41,7 +41,12 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 /*
- *	WTC
+ *	Comments that start with "CTS " refer to code changes for CTS integration
+ */
+
+
+/*
+ *	CTS
  *	Changed to allow hooks for CtsBridge to emit EiCreateTransaction
  *	and EiCanceledTender and error information
  *		orderAccepted
